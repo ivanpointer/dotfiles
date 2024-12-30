@@ -28,3 +28,10 @@ vim.g.mapleader = " "
 
 vim.opt.termguicolors = true
 vim.cmd.colorscheme('tokyonight')
+
+-- nvim-tree
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+vim.opt.termguicolors = true
+

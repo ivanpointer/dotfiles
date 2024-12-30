@@ -47,7 +47,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     lazy = false,
     build = ":TSUpdate",
-    config = function () 
+    config = function ()
       local configs = require("nvim-treesitter.configs")
 
       configs.setup({
@@ -55,7 +55,7 @@ return {
           ensure_installed = { "lua", "javascript", "html", "css", "php", "go", "json", "sql" },
           sync_install = false,
           highlight = { enable = true },
-          indent = { enable = true },  
+          indent = { enable = true },
         })
     end
  },
@@ -78,7 +78,7 @@ return {
       },
     },
   },
-  
+
   {
     'mbbill/undotree'
   },
@@ -93,9 +93,14 @@ return {
     config = function()
       require("nvim-tree").setup({
         view = {
-	  width = 60,
-	},
+          width = 60,
+        },
       })
+
+      vim.keymap.set("n", "<leader>tt", ":NvimTreeToggle<CR>")
+      vim.keymap.set("n", "<leader>tf", ":NvimTreeFocus<CR>")
+      vim.keymap.set("n", "<leader>tF", ":NvimTreeFindFile<CR>")
+      vim.keymap.set("n", "<leader>tc", ":NvimTreeCollapse<CR>")
     end,
   },
 
@@ -112,11 +117,45 @@ return {
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/nvim-cmp',
       'williamboman/mason.nvim',
-      'neovim/nvim-lspconfig',
     },
     config = function()
       require("mason").setup()
-      require("mason-lspconfig").setup({})
+      require("mason-lspconfig").setup({
+        -- https://github.com/williamboman/mason-lspconfig.nvim?tab=readme-ov-file#available-lsp-servers
+        ensure_installed = { "lua_ls", "ltex", "typos_lsp", "terraformls", "tflint", "sqlls", "gopls", "golangci_lint_ls", "buf_ls", "intelephense", "volar", "tailwindcss" }
+      })
     end
   },
+  {
+    'neovim/nvim-lspconfig',
+    config = function()
+      local lspconfig = require("lspconfig")
+
+      lspconfig.lua_ls.setup({})
+      lspconfig.ltex.setup({})
+      lspconfig.typos_lsp.setup({})
+
+      lspconfig.terraformls.setup({})
+      lspconfig.tflint.setup({})
+
+      lspconfig.sqlls.setup({})
+
+      lspconfig.gopls.setup({})
+      lspconfig.golangci_lint_ls.setup({})
+      lspconfig.buf_ls.setup({})
+
+      lspconfig.intelephense.setup({})
+      lspconfig.volar.setup({
+        -- add filetypes for typescript, javascript and vue
+        filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+        init_options = {
+          vue = {
+            -- disable hybrid mode
+            hybridMode = false,
+          },
+        },
+      })
+      lspconfig.tailwindcss.setup({})
+    end
+  }
 }
