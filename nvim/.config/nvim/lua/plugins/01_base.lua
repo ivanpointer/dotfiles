@@ -197,6 +197,7 @@ return {
         -- https://github.com/williamboman/mason-lspconfig.nvim?tab=readme-ov-file#available-lsp-servers
         ensure_installed = {
           "lua_ls",
+          "bashls",
           "ltex",
           "typos_lsp",
           "terraformls",
@@ -221,6 +222,11 @@ return {
 
       -- LUA
       lspconfig.lua_ls.setup({
+        capabilities = capabilities,
+      })
+
+      -- BASH
+      lspconfig.bashls.setup({
         capabilities = capabilities,
       })
 
