@@ -42,7 +42,7 @@ return {
       vim.keymap.set("n", "<leader>fh", builtin.help_tags)
 
       vim.keymap.set("n", "<leader>frr", builtin.lsp_references)
-      vim.keymap.set("n", "<leader>fd", builtin.diagnostics)
+      vim.keymap.set("n", "<leader>fp", builtin.diagnostics)
       vim.keymap.set("n", "<leader>frd", builtin.lsp_definitions)
       vim.keymap.set("n", "<leader>frn", builtin.lsp_incoming_calls)
       vim.keymap.set("n", "<leader>fri", builtin.lsp_implementations)
