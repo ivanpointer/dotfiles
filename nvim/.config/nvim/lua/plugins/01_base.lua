@@ -85,6 +85,91 @@ return {
   },
 
   {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim",
+    },
+    config = function()
+      local harpoon = require("harpoon")
+
+      local conf = require("telescope.config").values
+      local function toggle_telescope(harpoon_files)
+          local file_paths = {}
+          for _, item in ipairs(harpoon_files.items) do
+              table.insert(file_paths, item.value)
+          end
+
+          require("telescope.pickers").new({}, {
+              prompt_title = "Harpoon",
+              finder = require("telescope.finders").new_table({
+                  results = file_paths,
+              }),
+              previewer = conf.file_previewer({}),
+              sorter = conf.generic_sorter({}),
+          }):find()
+      end
+
+      vim.keymap.set("n", "<leader>a", function() toggle_telescope(harpoon:list()) end,
+        { desc = "Open harpoon window" })
+
+    end,
+    keys = {
+      {
+        "<leader>A",
+        function()
+          require("harpoon"):list():append()
+        end,
+        desc = "harpoon file",
+      },
+      {
+        "<leader>a",
+        function()
+          local harpoon = require("harpoon")
+          harpoon.ui:toggle_quick_menu(harpoon:list())
+        end,
+        desc = "harpoon quick menu",
+      },
+      {
+        "<leader>1",
+        function()
+          require("harpoon"):list():select(1)
+        end,
+        desc = "harpoon to file 1",
+      },
+      {
+        "<leader>2",
+        function()
+          require("harpoon"):list():select(2)
+        end,
+        desc = "harpoon to file 2",
+      },
+      {
+        "<leader>3",
+        function()
+          require("harpoon"):list():select(3)
+        end,
+        desc = "harpoon to file 3",
+      },
+      {
+        "<leader>4",
+        function()
+          require("harpoon"):list():select(4)
+        end,
+        desc = "harpoon to file 4",
+      },
+      {
+        "<leader>5",
+        function()
+          require("harpoon"):list():select(5)
+        end,
+        desc = "harpoon to file 5",
+      },
+    },
+  },
+
+  {
     "nvim-treesitter/nvim-treesitter",
     lazy = false,
     build = ":TSUpdate",
@@ -241,18 +326,18 @@ return {
       -- TEXT/GENERAL
       lspconfig.ltex.setup({})
       lspconfig.typos_lsp.setup({
-        capabilities = capabilities
+        capabilities = capabilities,
       })
 
       -- TERRAFORM
       lspconfig.terraformls.setup({
-        capabilities = capabilities
+        capabilities = capabilities,
       })
       lspconfig.tflint.setup({})
 
       -- SQL
       lspconfig.sqlls.setup({
-        capabilities = capabilities
+        capabilities = capabilities,
       })
 
       -- GOLANG
@@ -262,12 +347,12 @@ return {
 
       -- PHP
       lspconfig.intelephense.setup({
-        capabilities = capabilities
+        capabilities = capabilities,
       })
 
       -- TYPESCRIPT
       lspconfig.ts_ls.setup({
-        capabilities = capabilities
+        capabilities = capabilities,
       })
       lspconfig.volar.setup({
         -- add filetypes for typescript, javascript and vue
@@ -280,7 +365,7 @@ return {
         },
       })
       lspconfig.tailwindcss.setup({
-        capabilities = capabilities
+        capabilities = capabilities,
       })
 
       -- FORMATTERS
@@ -361,10 +446,10 @@ return {
       "TmuxNavigatorProcessList",
     },
     keys = {
-      { "<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>" },
-      { "<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>" },
-      { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
-      { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
+      { "<c-h>",  "<cmd><C-U>TmuxNavigateLeft<cr>" },
+      { "<c-j>",  "<cmd><C-U>TmuxNavigateDown<cr>" },
+      { "<c-k>",  "<cmd><C-U>TmuxNavigateUp<cr>" },
+      { "<c-l>",  "<cmd><C-U>TmuxNavigateRight<cr>" },
       { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
     },
   },
