@@ -232,14 +232,20 @@ return {
 
       -- TEXT/GENERAL
       lspconfig.ltex.setup({})
-      lspconfig.typos_lsp.setup({})
+      lspconfig.typos_lsp.setup({
+        capabilities = capabilities
+      })
 
       -- TERRAFORM
-      lspconfig.terraformls.setup({})
+      lspconfig.terraformls.setup({
+        capabilities = capabilities
+      })
       lspconfig.tflint.setup({})
 
       -- SQL
-      lspconfig.sqlls.setup({})
+      lspconfig.sqlls.setup({
+        capabilities = capabilities
+      })
 
       -- GOLANG
       lspconfig.gopls.setup({})
@@ -247,10 +253,14 @@ return {
       lspconfig.buf_ls.setup({})
 
       -- PHP
-      lspconfig.intelephense.setup({})
+      lspconfig.intelephense.setup({
+        capabilities = capabilities
+      })
 
       -- TYPESCRIPT
-      lspconfig.ts_ls.setup({})
+      lspconfig.ts_ls.setup({
+        capabilities = capabilities
+      })
       lspconfig.volar.setup({
         -- add filetypes for typescript, javascript and vue
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
@@ -261,7 +271,9 @@ return {
           },
         },
       })
-      lspconfig.tailwindcss.setup({})
+      lspconfig.tailwindcss.setup({
+        capabilities = capabilities
+      })
 
       -- FORMATTERS
       lspconfig.stylua.setup({})
