@@ -111,60 +111,115 @@ return {
           }):find()
       end
 
-      vim.keymap.set("n", "<leader>a", function() toggle_telescope(harpoon:list()) end,
+      vim.keymap.set("n", "<leader>ha", function() toggle_telescope(harpoon:list()) end,
         { desc = "Open harpoon window" })
 
     end,
     keys = {
       {
-        "<leader>A",
+        "<leader>hA",
         function()
           require("harpoon"):list():add()
         end,
         desc = "harpoon file",
       },
       {
-        "<leader>a",
-        function()
-          local harpoon = require("harpoon")
-          harpoon.ui:toggle_quick_menu(harpoon:list())
-        end,
-        desc = "harpoon quick menu",
-      },
-      {
-        "<leader>1",
+        "<leader>h1",
         function()
           require("harpoon"):list():select(1)
         end,
         desc = "harpoon to file 1",
       },
       {
-        "<leader>2",
+        "<leader>h2",
         function()
           require("harpoon"):list():select(2)
         end,
         desc = "harpoon to file 2",
       },
       {
-        "<leader>3",
+        "<leader>h3",
         function()
           require("harpoon"):list():select(3)
         end,
         desc = "harpoon to file 3",
       },
       {
-        "<leader>4",
+        "<leader>h4",
         function()
           require("harpoon"):list():select(4)
         end,
         desc = "harpoon to file 4",
       },
       {
-        "<leader>5",
+        "<leader>hh",
+        function()
+          require("harpoon"):list():select(1)
+        end,
+        desc = "harpoon to file 1",
+      },
+      {
+        "<leader>ht",
+        function()
+          require("harpoon"):list():select(2)
+        end,
+        desc = "harpoon to file 2",
+      },
+      {
+        "<leader>hn",
+        function()
+          require("harpoon"):list():select(3)
+        end,
+        desc = "harpoon to file 3",
+      },
+      {
+        "<leader>hs",
+        function()
+          require("harpoon"):list():select(4)
+        end,
+        desc = "harpoon to file 4",
+      },
+      {
+        "<leader>h5",
         function()
           require("harpoon"):list():select(5)
         end,
         desc = "harpoon to file 5",
+      },
+      {
+        "<leader>h6",
+        function()
+          require("harpoon"):list():select(6)
+        end,
+        desc = "harpoon to file 6",
+      },
+      {
+        "<leader>h7",
+        function()
+          require("harpoon"):list():select(7)
+        end,
+        desc = "harpoon to file 7",
+      },
+      {
+        "<leader>h8",
+        function()
+          require("harpoon"):list():select(8)
+        end,
+        desc = "harpoon to file 8",
+      },
+      {
+        "<leader>h9",
+        function()
+          require("harpoon"):list():select(9)
+        end,
+        desc = "harpoon to file 9",
+      },
+      {
+        "<leader>h0",
+        function()
+          require("harpoon"):list():select(10)
+        end,
+        desc = "harpoon to file 10",
       },
     },
   },
