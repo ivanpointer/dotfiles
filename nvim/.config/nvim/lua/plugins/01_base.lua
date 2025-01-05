@@ -40,6 +40,13 @@ return {
 
       vim.keymap.set("n", "<leader>fb", builtin.buffers)
       vim.keymap.set("n", "<leader>fh", builtin.help_tags)
+
+      vim.keymap.set("n", "<leader>frr", builtin.lsp_references)
+      vim.keymap.set("n", "<leader>frd", builtin.lsp_definitions)
+      vim.keymap.set("n", "<leader>frn", builtin.lsp_incoming_calls)
+      vim.keymap.set("n", "<leader>fri", builtin.lsp_implementations)
+      vim.keymap.set("n", "<leader>fsd", builtin.lsp_document_symbols)
+      vim.keymap.set("n", "<leader>fsw", builtin.lsp_workspace_symbols)
     end,
   },
 
@@ -280,6 +287,9 @@ return {
 
       vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
       vim.keymap.set("n", "gd", vim.lsp.buf.definition, {})
+      vim.keymap.set("n", "grn", vim.lsp.buf.rename, {})
+      vim.keymap.set("n", "gd", vim.lsp.buf.definition, {})
+
       vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {})
     end,
   },
