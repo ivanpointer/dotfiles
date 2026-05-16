@@ -1,0 +1,56 @@
+# zoxide
+eval "$(zoxide init zsh)"
+
+# atuin
+eval "$(atuin init zsh)"
+
+# starship
+eval "$(starship init zsh)"
+
+# carapace
+autoload -U compinit && compinit
+export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional
+zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
+source <(carapace _carapace zsh)
+
+# devbox
+export DEVBOX_NO_PROMPT=true
+
+# tmux
+## sesh
+function sesh-sessions() {
+  {
+    exec </dev/tty
+    exec <&1
+    local session
+    session=$(sesh list --icons | fzf --height 60% --reverse \
+      --no-sort --ansi --border-label ' sesh ' --border --prompt '⚡  ' \
+      --header '  ^a all ^t tmux ^g configs ^x zoxide ^f find' \
+      --bind 'tab:down,btab:up' \
+      --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
+      --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
+      --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
+      --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
+      --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
+      --preview-window 'right:55%' \
+      --preview 'sesh preview {}')
+    zle reset-prompt > /dev/null 2>&1 || true
+    [[ -z "$session" ]] && return
+    sesh connect $session
+  }
+}
+
+zle     -N             sesh-sessions
+
+# sesh keybinding (Alt-s)
+bindkey '\es' sesh-sessions
+
+# Insert blank line between prompts (instead of starship's add_newline,
+# which duplicates on every vi mode switch / zle reset-prompt)
+_prompt_newline() { print '' }
+add-zsh-hook precmd _prompt_newline
+
+# GENERAL
+export EDITOR=nvim
+alias vim=nvim
+export PATH="$HOME/.local/bin:$PATH"

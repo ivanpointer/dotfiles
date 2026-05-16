@@ -1,0 +1,74 @@
+#:schema https://github.com/joshmedeski/sesh/raw/main/sesh.schema.json
+
+dir_length = 2
+
+[default_session]
+preview_command = "eza --all --git --icons --color=always {}"
+
+[[session]]
+name = "tmux config"
+path = "~"
+startup_command = "chezmoi edit ~/.tmux.conf"
+preview_command = "bat --color=always ~/.tmux.conf"
+
+[[session]]
+name = "nix-darwin config"
+path = "/etc/nix-darwin"
+startup_command = "nvim flake.nix"
+preview_command = "bat --color=always /etc/nix-darwin/flake.nix"
+windows = ["git"]
+
+[[session]]
+name = "sesh config"
+path = "~"
+startup_command = "chezmoi edit ~/.config/sesh/sesh.toml"
+preview_command = "bat --color=always ~/.config/sesh/sesh.toml"
+
+[[session]]
+name = "nvim config"
+path = "~/.config/nvim"
+windows = ["devbox-shell"]
+
+[[session]]
+name = "chezmoi config"
+path = "~/.local/share/chezmoi"
+startup_command = "chezmoi cd"
+windows = ["git"]
+
+[[session]]
+name = "codex-workscribe"
+path = "~/Source/codex-workscribe"
+windows = ["devbox-shell"]
+
+[[session]]
+name = "hypknowledge"
+path = "~/Source/hypknowledge"
+windows = ["devbox-shell"]
+
+[[session]]
+name = "build123d"
+path = "~/Source/build123d"
+windows = ["devbox-shell"]
+
+[[wildcard]]
+pattern = "~/Source/**"
+
+[[window]]
+name = "git"
+startup_script = "lazygit"
+
+[[window]]
+name = "nvim"
+startup_script = "nvim"
+
+[[window]]
+name = "devbox-shell"
+startup_script = "devbox shell"
+
+[[window]]
+name = "devbox-git"
+startup_script = "devbox run lazygit"
+
+[[window]]
+name = "devbox-nvim"
+startup_script = "devbox run nvim"
