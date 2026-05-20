@@ -1,0 +1,13 @@
+{{- $openBrainMcpKey := onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" -}}
+{
+  "mcpServers": {
+    "open-brain": {
+      "transport": "streamable-http",
+      "url": "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp",
+      "headers": {
+        "x-brain-key": "{{ $openBrainMcpKey }}"
+      },
+      "lifecycle": "eager"
+    }
+  }
+}

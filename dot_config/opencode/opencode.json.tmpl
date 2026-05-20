@@ -1,0 +1,30 @@
+{{- $openBrainMcpKey := onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" -}}
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "gemma4:e4b": {
+          "name": "Gemma4 e4b"
+        }
+      }
+    }
+  },
+  "mcp": {
+    "open-brain": {
+      "type": "remote",
+      "url": "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp",
+      "headers": {
+        "x-brain-key": "{{ $openBrainMcpKey }}"
+      },
+      "enabled": true,
+      "oauth": false,
+      "timeout": 30000
+    }
+  }
+}

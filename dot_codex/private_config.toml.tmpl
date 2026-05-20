@@ -3,6 +3,7 @@ model_reasoning_effort = "high"
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 notify = ["/Users/ivanpointer/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+{{- $openBrainMcpKey := onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" }}
 
 [projects."/Users/ivanpointer/Source/hypknowledge"]
 trust_level = "trusted"
@@ -28,6 +29,9 @@ trust_level = "trusted"
 [projects."/Users/ivanpointer/.pi/agent/extensions"]
 trust_level = "trusted"
 
+[projects."/Users/ivanpointer/Source/npe633-cosmotyl-companion"]
+trust_level = "trusted"
+
 [notice.model_migrations]
 "gpt-5.3-codex" = "gpt-5.4"
 
@@ -38,17 +42,14 @@ memories = true
 chronicle = true
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-12T15:07:58Z"
+last_updated = "2026-05-16T21:12:35Z"
 source_type = "local"
 source = "/Users/ivanpointer/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-12T15:08:17Z"
+last_updated = "2026-05-16T23:39:27Z"
 source_type = "local"
 source = "/Users/ivanpointer/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
-
-[plugins."browser-use@openai-bundled"]
-enabled = true
 
 [plugins."documents@openai-primary-runtime"]
 enabled = true
@@ -68,9 +69,6 @@ enabled = true
 [plugins."computer-use@openai-bundled"]
 enabled = true
 
-[plugins."chrome@openai-bundled"]
-enabled = true
-
 [plugins."teams@openai-curated"]
 enabled = true
 
@@ -78,6 +76,12 @@ enabled = true
 enabled = true
 
 [plugins."codex-security@openai-curated"]
+enabled = true
+
+[plugins."browser-use@openai-bundled"]
+enabled = true
+
+[plugins."chrome@openai-bundled"]
 enabled = true
 
 [hooks.state]
@@ -94,6 +98,15 @@ trusted_hash = "sha256:4e93fcf51367b41aeaf39bdce287d07970139b9069b6b20dd73e421c3
 [hooks.state."/Users/ivanpointer/.codex/hooks.json:user_prompt_submit:0:0"]
 trusted_hash = "sha256:00a9355c15d758b4775b0df9b96658097a5ab4a2da159fe89738bc7ca35b7c73"
 
+[hooks.state."/Users/ivanpointer/Source/hypknowledge/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:c7811593b61681599d537810ea5396fc587f6252034f06f463f7a068c75a7183"
+
+[hooks.state."/Users/ivanpointer/Source/hypknowledge/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:0dc531951a665f7cc362dde7e6789551b8593a477169dc42c42ee52249c98371"
+
+[hooks.state."/Users/ivanpointer/Source/hypknowledge/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:88406da9a35ccb788be48fa741efd0899886a46bc223990cad6b5621aedd6e46"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
@@ -102,6 +115,9 @@ command = "npx"
 args = ["-y", "@bitbonsai/mcpvault@latest", "/Users/ivanpointer/Source/hypknowledge/docs"]
 
 [mcp_servers.obsidian-docs-hypknowledge.tools.search_notes]
+approval_mode = "approve"
+
+[mcp_servers.obsidian-docs-hypknowledge.tools.read_multiple_notes]
 approval_mode = "approve"
 
 [mcp_servers.azure-devops-hypknowledge]
@@ -146,3 +162,9 @@ approval_mode = "approve"
 generate_memories = true
 use_memories = true
 # workscribe-managed hooks:end
+
+[mcp_servers.open-brain]
+url = "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp"
+
+[mcp_servers.open-brain.http_headers]
+x-brain-key = "{{ $openBrainMcpKey }}"
