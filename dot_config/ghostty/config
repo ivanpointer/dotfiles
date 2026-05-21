@@ -1,0 +1,10 @@
+font-family = "Inconsolata Nerd Font"
+font-size = 14
+theme = Catppuccin Mocha
+window-title-font-family = "Open Sans"
+background-blur-radius = 10
+background-opacity = 0.9
+
+keybind = shift+enter=text:\n
+
+macos-option-as-alt = left
