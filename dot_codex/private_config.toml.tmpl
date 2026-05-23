@@ -2,7 +2,10 @@ model = "gpt-5.5"
 model_reasoning_effort = "high"
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
+permission_mode = "auto-edit"
 notify = ["/Users/ivanpointer/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+personality = "pragmatic"
+approvals_reviewer = "guardian_subagent"
 {{- $openBrainMcpKey := onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" }}
 
 [projects."/Users/ivanpointer/Source/hypknowledge"]
@@ -32,22 +35,37 @@ trust_level = "trusted"
 [projects."/Users/ivanpointer/Source/npe633-cosmotyl-companion"]
 trust_level = "trusted"
 
+[projects."/Users/ivanpointer/.local/share/chezmoi"]
+trust_level = "trusted"
+
+[projects."/Users/ivanpointer/Source/matrix-monitor"]
+trust_level = "trusted"
+
+[projects."/Users/ivanpointer/Source"]
+trust_level = "trusted"
+
+[projects."/Users/ivanpointer/Source/ivanpointer/keybug"]
+trust_level = "trusted"
+
+[projects."/Users/ivanpointer/Source/hypknowledge/visualstudio-hypknowledge/infra"]
+trust_level = "trusted"
+
 [notice.model_migrations]
 "gpt-5.3-codex" = "gpt-5.4"
 
 # workscribe-managed hooks:start
 [features]
 hooks = true
-memories = true
-chronicle = true
+memories = false
+chronicle = false
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-16T21:12:35Z"
+last_updated = "2026-05-21T20:17:14Z"
 source_type = "local"
 source = "/Users/ivanpointer/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-16T23:39:27Z"
+last_updated = "2026-05-21T20:39:35Z"
 source_type = "local"
 source = "/Users/ivanpointer/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
@@ -78,7 +96,7 @@ enabled = true
 [plugins."codex-security@openai-curated"]
 enabled = true
 
-[plugins."browser-use@openai-bundled"]
+[plugins."browser@openai-bundled"]
 enabled = true
 
 [plugins."chrome@openai-bundled"]
@@ -106,6 +124,10 @@ trusted_hash = "sha256:0dc531951a665f7cc362dde7e6789551b8593a477169dc42c42ee5224
 
 [hooks.state."/Users/ivanpointer/Source/hypknowledge/.codex/hooks.json:user_prompt_submit:0:0"]
 trusted_hash = "sha256:88406da9a35ccb788be48fa741efd0899886a46bc223990cad6b5621aedd6e46"
+
+[tui]
+status_line = ["model-with-reasoning", "current-dir", "git-branch", "pull-request-number", "run-state", "context-remaining", "five-hour-limit", "weekly-limit"]
+status_line_use_colors = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
@@ -151,6 +173,15 @@ approval_mode = "approve"
 [mcp_servers.azure-devops-hypknowledge.tools.wit_add_work_item_comment]
 approval_mode = "approve"
 
+[mcp_servers.azure-devops-hypknowledge.tools.repo_list_pull_requests_by_repo_or_project]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.repo_get_pull_request_changes]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.core_list_projects]
+approval_mode = "approve"
+
 [mcp_servers.laravel-boost-tracker]
 command = "devbox"
 args = ["run", "-c", "/Users/ivanpointer/Source/hypknowledge/github-hypknowledge/tracker", "--env", "APP_ENV=local", "--env", "APP_DEBUG=true", "--env", "CACHE_STORE=array", "php", "/Users/ivanpointer/Source/hypknowledge/github-hypknowledge/tracker/artisan", "boost:mcp"]
@@ -159,8 +190,8 @@ args = ["run", "-c", "/Users/ivanpointer/Source/hypknowledge/github-hypknowledge
 approval_mode = "approve"
 
 [memories]
-generate_memories = true
-use_memories = true
+generate_memories = false
+use_memories = false
 # workscribe-managed hooks:end
 
 [mcp_servers.open-brain]
