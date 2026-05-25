@@ -1,0 +1,3 @@
+{{- $wakatimeApiKey := onepasswordRead "op://Personal/WakaTime/api key" -}}
+[settings]
+api_key = {{ $wakatimeApiKey }}
