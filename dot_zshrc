@@ -45,6 +45,8 @@ zle     -N             sesh-sessions
 # sesh keybinding (Alt-s)
 bindkey '\es' sesh-sessions
 
+autoload -Uz add-zsh-hook
+
 # Insert blank line between prompts (instead of starship's add_newline,
 # which duplicates on every vi mode switch / zle reset-prompt)
 _prompt_newline() { print '' }
