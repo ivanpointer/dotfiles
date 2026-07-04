@@ -1,17 +1,33 @@
+# nix-darwin normally exposes system packages through /run/current-system.
+# /run is volatile, so fall back to the system profile if activation has not
+# recreated that symlink yet.
+if [[ ! -e /run/current-system && -d /nix/var/nix/profiles/system/sw/bin ]]; then
+  path=(/nix/var/nix/profiles/system/sw/bin $path)
+  export PATH
+fi
+
 # zoxide
-eval "$(zoxide init zsh)"
+if (( $+commands[zoxide] )); then
+  eval "$(zoxide init zsh)"
+fi
 
 # atuin
-eval "$(atuin init zsh)"
+if (( $+commands[atuin] )); then
+  eval "$(atuin init zsh)"
+fi
 
 # starship
-eval "$(starship init zsh)"
+if (( $+commands[starship] )); then
+  eval "$(starship init zsh)"
+fi
 
 # carapace
-autoload -U compinit && compinit
-export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional
-zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
-source <(carapace _carapace zsh)
+if (( $+commands[carapace] )); then
+  autoload -U compinit && compinit
+  export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense' # optional
+  zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
+  source <(carapace _carapace zsh)
+fi
 
 # devbox
 export DEVBOX_NO_PROMPT=true
