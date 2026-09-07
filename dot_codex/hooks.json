@@ -1,26 +1,6 @@
 {
   "hooks" : {
-    "Notification" : [
-      {
-        "hooks" : [
-          {
-            "command" : "'\/Users\/ivanpointer\/.codex\/hooks\/codex-say-alert.sh' # codex-say-question-hook",
-            "type" : "command"
-          }
-        ]
-      }
-    ],
     "PostToolUse" : [
-      {
-        "hooks" : [
-          {
-            "command" : "PYTHONPATH=\"\/Users\/ivanpointer\/Source\/codex-workscribe\/src\" \"\/nix\/store\/nmca1swk5407qzpiydk592b96vggjxyg-python3-3.12.13\/bin\/python3.12\" -m workscribe hook codex",
-            "statusMessage" : "workscribe: logging tool activity",
-            "timeout" : 30,
-            "type" : "command"
-          }
-        ]
-      },
       {
         "hooks" : [
           {
@@ -29,6 +9,16 @@
           }
         ],
         "matcher" : "Bash"
+      },
+      {
+        "hooks" : [
+          {
+            "command" : "\"\/Users\/ivanpointer\/.local\/bin\/workscribe\" hook codex # workscribe-managed-codex-hook",
+            "statusMessage" : "workscribe: logging tool activity",
+            "timeout" : 30,
+            "type" : "command"
+          }
+        ]
       }
     ],
     "PreToolUse" : [
@@ -46,22 +36,22 @@
       {
         "hooks" : [
           {
-            "command" : "PYTHONPATH=\"\/Users\/ivanpointer\/Source\/codex-workscribe\/src\" \"\/nix\/store\/nmca1swk5407qzpiydk592b96vggjxyg-python3-3.12.13\/bin\/python3.12\" -m workscribe hook codex",
+            "command" : "'\/Users\/ivanpointer\/Library\/Application Support\/Bartender\/NotchBar\/AgentStatus\/hooks\/codex-notify-hook.sh' # notchbar-agents-codex-hook",
+            "type" : "command"
+          }
+        ],
+        "matcher" : "startup|resume"
+      },
+      {
+        "hooks" : [
+          {
+            "command" : "\"\/Users\/ivanpointer\/.local\/bin\/workscribe\" hook codex # workscribe-managed-codex-hook",
             "statusMessage" : "workscribe: recording session start",
             "timeout" : 30,
             "type" : "command"
           }
         ],
         "matcher" : "startup|resume|clear"
-      },
-      {
-        "hooks" : [
-          {
-            "command" : "'\/Users\/ivanpointer\/Library\/Application Support\/Bartender\/NotchBar\/AgentStatus\/hooks\/codex-notify-hook.sh' # notchbar-agents-codex-hook",
-            "type" : "command"
-          }
-        ],
-        "matcher" : "startup|resume"
       }
     ],
     "Stop" : [
@@ -69,10 +59,6 @@
         "hooks" : [
           {
             "command" : "'\/Users\/ivanpointer\/Library\/Application Support\/Bartender\/NotchBar\/AgentStatus\/hooks\/codex-notify-hook.sh' # notchbar-agents-codex-hook",
-            "type" : "command"
-          },
-          {
-            "command" : "'\/Users\/ivanpointer\/.codex\/hooks\/codex-say-alert.sh' # codex-say-ready-hook",
             "type" : "command"
           }
         ]
@@ -82,8 +68,7 @@
       {
         "hooks" : [
           {
-            "command" : "PYTHONPATH=\"\/Users\/ivanpointer\/Source\/codex-workscribe\/src\" \"\/nix\/store\/nmca1swk5407qzpiydk592b96vggjxyg-python3-3.12.13\/bin\/python3.12\" -m workscribe hook codex",
-            "timeout" : 30,
+            "command" : "'\/Users\/ivanpointer\/Library\/Application Support\/Bartender\/NotchBar\/AgentStatus\/hooks\/codex-notify-hook.sh' # notchbar-agents-codex-hook",
             "type" : "command"
           }
         ]
@@ -91,7 +76,8 @@
       {
         "hooks" : [
           {
-            "command" : "'\/Users\/ivanpointer\/Library\/Application Support\/Bartender\/NotchBar\/AgentStatus\/hooks\/codex-notify-hook.sh' # notchbar-agents-codex-hook",
+            "command" : "\"\/Users\/ivanpointer\/.local\/bin\/workscribe\" hook codex # workscribe-managed-codex-hook",
+            "timeout" : 30,
             "type" : "command"
           }
         ]
