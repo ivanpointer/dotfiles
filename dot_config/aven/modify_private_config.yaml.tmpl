@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+
+{{ $serverURL := onepasswordRead "op://Personal/Aven Sync Auth Token/server_url" }}
+{{ $authToken := onepasswordRead "op://Personal/Aven Sync Auth Token/password" }}
+
+# Preserve Aven-owned settings and rewrite only its top-level sync section.
+AVEN_SERVER_URL={{ $serverURL | quote }} \
+AVEN_AUTH_TOKEN={{ $authToken | quote }} \
+awk '
+  function emit(line) {
+    print line
+    output_lines++
+  }
+
+  /^sync:/ {
+    in_sync = 1
+    next
+  }
+
+  in_sync {
+    if ($0 ~ /^[^[:space:]#]/) {
+      in_sync = 0
+    } else if ($0 ~ /^#/) {
+      emit($0)
+      next
+    } else {
+      next
+    }
+  }
+
+  { emit($0) }
+
+  END {
+    if (output_lines > 0) {
+      print ""
+    }
+    print "sync:"
+    print "  enabled: true"
+    print "  server_url: \"" ENVIRON["AVEN_SERVER_URL"] "\""
+    print "  interval_seconds: 30"
+    print "  auth_token: \"" ENVIRON["AVEN_AUTH_TOKEN"] "\""
+  }
+'

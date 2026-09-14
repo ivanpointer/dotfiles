@@ -1,0 +1,8 @@
+{
+  "buffer_font_family": "MonoLisaCode",
+  "buffer_font_fallbacks": ["Symbols Nerd Font Mono"],
+  "terminal": {
+    "font_family": "MonoLisaCode",
+    "font_fallbacks": ["Symbols Nerd Font Mono"]
+  }
+}

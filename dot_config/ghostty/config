@@ -1,4 +1,7 @@
-font-family = "Inconsolata Nerd Font"
+# MonoLisaCode is the primary terminal face; the symbols-only Nerd Font
+# supplies Powerline and other icon glyphs that MonoLisa does not include.
+font-family = "MonoLisaCode"
+font-family = "Symbols Nerd Font Mono"
 font-size = 14
 theme = Catppuccin Mocha
 window-title-font-family = "Open Sans"

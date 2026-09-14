@@ -206,8 +206,14 @@ generate_memories = false
 use_memories = false
 # workscribe-managed hooks:end
 
+[mcp_servers.goland]
+url = "http://127.0.0.1:64342/stream"
+
 [mcp_servers.open-brain]
 url = "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp"
 
 [mcp_servers.open-brain.http_headers]
 x-brain-key = "{{ $openBrainMcpKey }}"
+
+[mcp_servers.1password]
+command = "/Applications/1Password.app/Contents/MacOS/1password-mcp"
