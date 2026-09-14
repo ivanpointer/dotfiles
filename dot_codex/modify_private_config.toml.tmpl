@@ -1,0 +1,20 @@
+#!/bin/sh
+# Preserve locally selected Codex model settings while managing all other config.
+set -eu
+
+managed_config="$(mktemp "${TMPDIR:-/tmp}/chezmoi-codex-config.XXXXXX")"
+trap 'rm -f "$managed_config"' EXIT HUP INT TERM
+
+cat >"$managed_config" <<'CHEZMOI_MANAGED_CONFIG'
+{{ template "codex-config.toml.tmpl" . }}
+CHEZMOI_MANAGED_CONFIG
+
+# stdin is the existing ~/.codex/config.toml. Retain only its top-level model
+# choices, then append the fully managed config body.
+awk '
+  FILENAME == "-" {
+    if ($0 ~ /^model = / || $0 ~ /^model_reasoning_effort = /) print
+    next
+  }
+  { print }
+' - "$managed_config"
