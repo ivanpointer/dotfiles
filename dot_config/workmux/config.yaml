@@ -1,0 +1,10 @@
+# Default Workmux behavior for tmux-based, agent-assisted worktrees.
+nerdfont: true
+base_branch: auto
+worktree_dir: ~/.workmux/{project}
+agent: codex
+
+panes:
+  - command: <agent>
+    focus: true
+  - split: horizontal
