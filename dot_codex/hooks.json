@@ -1,5 +1,15 @@
 {
   "hooks" : {
+    "PermissionRequest" : [
+      {
+        "hooks" : [
+          {
+            "command" : "workmux set-window-status waiting",
+            "type" : "command"
+          }
+        ]
+      }
+    ],
     "PostToolUse" : [
       {
         "hooks" : [
@@ -16,6 +26,14 @@
             "command" : "\"\/Users\/ivanpointer\/.local\/bin\/workscribe\" hook codex # workscribe-managed-codex-hook",
             "statusMessage" : "workscribe: logging tool activity",
             "timeout" : 30,
+            "type" : "command"
+          }
+        ]
+      },
+      {
+        "hooks" : [
+          {
+            "command" : "workmux set-window-status working",
             "type" : "command"
           }
         ]
@@ -52,6 +70,15 @@
           }
         ],
         "matcher" : "startup|resume|clear"
+      },
+      {
+        "hooks" : [
+          {
+            "command" : "workmux register-agent",
+            "type" : "command"
+          }
+        ],
+        "matcher" : "startup|resume|clear"
       }
     ],
     "Stop" : [
@@ -59,6 +86,34 @@
         "hooks" : [
           {
             "command" : "'\/Users\/ivanpointer\/Library\/Application Support\/Bartender\/NotchBar\/AgentStatus\/hooks\/codex-notify-hook.sh' # notchbar-agents-codex-hook",
+            "type" : "command"
+          }
+        ]
+      },
+      {
+        "hooks" : [
+          {
+            "command" : "workmux set-window-status done",
+            "type" : "command"
+          }
+        ]
+      }
+    ],
+    "SubagentStart" : [
+      {
+        "hooks" : [
+          {
+            "command" : "workmux set-window-status working",
+            "type" : "command"
+          }
+        ]
+      }
+    ],
+    "SubagentStop" : [
+      {
+        "hooks" : [
+          {
+            "command" : "workmux set-window-status working",
             "type" : "command"
           }
         ]
@@ -78,6 +133,14 @@
           {
             "command" : "\"\/Users\/ivanpointer\/.local\/bin\/workscribe\" hook codex # workscribe-managed-codex-hook",
             "timeout" : 30,
+            "type" : "command"
+          }
+        ]
+      },
+      {
+        "hooks" : [
+          {
+            "command" : "workmux set-window-status working",
             "type" : "command"
           }
         ]
