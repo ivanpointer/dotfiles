@@ -136,6 +136,10 @@ trusted_hash = "sha256:6f3055172cef47cede1ab5ce4022931203b94036bb5337ea8b19d5370
 trusted_hash = "sha256:b988d58ed6e594f26f524ac2946939439e0c6090956d2e80cd5181f3865e97b8"
 
 [tui]
+# Keep Codex in the primary terminal buffer. In Ghostty, full-screen TUIs use
+# alternate scroll mode, which converts wheel events into Up/Down keys and
+# makes Codex cycle prompt history instead of scrolling terminal output.
+alternate_screen = "never"
 status_line = ["model-with-reasoning", "current-dir", "git-branch", "pull-request-number", "run-state", "context-remaining", "five-hour-limit", "weekly-limit"]
 status_line_use_colors = true
 
