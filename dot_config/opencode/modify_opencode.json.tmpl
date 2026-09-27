@@ -1,0 +1,18 @@
+#!/bin/sh
+# OpenCode's CLI adds MCP entries here. Own our provider and MCP keys while
+# preserving OpenCode state and registrations added by other tools.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "opencode-managed-config.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq --argjson declared "$declared" '
+  .["$schema"] = ($declared["$schema"] // .["$schema"])
+  | .provider = ((.provider // {}) + ($declared.provider // {}))
+  | .mcp = ((.mcp // {}) + ($declared.mcp // {}))
+'
