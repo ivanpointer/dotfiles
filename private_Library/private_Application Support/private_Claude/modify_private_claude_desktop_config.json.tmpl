@@ -1,0 +1,17 @@
+#!/bin/sh
+# Claude Desktop owns UI/session/device state in this file. Keep it and foreign
+# MCP servers; chezmoi owns only the stable preferences and keyed MCP entries.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "claude-desktop-config.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq --argjson declared "$declared" '
+  .preferences = ((.preferences // {}) + ($declared.preferences // {}))
+  | .mcpServers = ((.mcpServers // {}) + ($declared.mcpServers // {}))
+'
