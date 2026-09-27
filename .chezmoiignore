@@ -1,0 +1,16 @@
+# AI harness runtime state is deliberately never source-managed. These are
+# source-path patterns, preventing accidental `chezmoi add` of sessions,
+# caches, and machine-generated state. Shared JSON/TOML files retain embedded
+# runtime state through modify_ scripts instead.
+private_dot_claude/private_projects/**
+private_dot_claude/private_session-env/**
+dot_codex/private_sessions/**
+dot_codex/private_cache/**
+private_dot_gemini/private_sessions/**
+private_dot_gemini/private_tmp/**
+private_dot_pi/private_agent/private_sessions/**
+private_Library/private_Application Support/private_Claude/private_Cache/**
+private_Library/private_Application Support/private_Claude/private_Code Cache/**
+private_Library/private_Application Support/private_Claude/private_GPUCache/**
+private_Library/private_Application Support/private_Claude/private_Local Storage/**
+private_Library/private_Application Support/private_Claude/private_Session Storage/**
