@@ -17,13 +17,24 @@ import urllib.request
 MODEL = "deepgram/flux-tts:free"
 SPEECH_SPEED = 1.25
 SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech"
-STATE_DIR = os.path.join(os.path.expanduser("~"), ".local", "state", "speak")
+DEFAULT_STATE_DIR = os.path.join(os.path.expanduser("~"), ".local", "state", "speak")
+STATE_DIR = os.path.expanduser(os.environ.get("SPEAK_STATE_DIR") or DEFAULT_STATE_DIR)
 SESSIONS_PATH = os.path.join(STATE_DIR, "sessions.json")
 SESSIONS_LOCK_PATH = os.path.join(STATE_DIR, "sessions.lock")
 PLAYBACK_LOCK_PATH = os.path.join(STATE_DIR, "playback.lock")
 LOG_PATH = os.path.join(STATE_DIR, "speak.log")
 LOG_LOCK_PATH = os.path.join(STATE_DIR, "speak.log.lock")
-SESSION_TTL_SECONDS = 4 * 60 * 60
+
+
+def env_nonnegative_int(name, default):
+    try:
+        value = int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+    return value if value >= 0 else default
+
+
+SESSION_TTL_SECONDS = env_nonnegative_int("SPEAK_SLOT_TTL_SECONDS", 4 * 60 * 60)
 MAX_CLIP_AGE_SECONDS = 120
 MAX_LOG_BYTES = 1024 * 1024
 
@@ -85,7 +96,10 @@ def assign_slot(session_id):
                 and isinstance(value.get("slot"), int)
                 and value.get("slot", 0) > 0
                 and isinstance(value.get("last_seen"), (int, float))
-                and now - value["last_seen"] <= SESSION_TTL_SECONDS
+                and (
+                    key == session_id
+                    or now - value["last_seen"] <= SESSION_TTL_SECONDS
+                )
             }
             current = sessions.get(session_id)
             if current:
