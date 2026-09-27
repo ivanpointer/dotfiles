@@ -1,0 +1,21 @@
+#!/bin/sh
+# pi install/remove updates packages and pi updates its changelog marker. Keep
+# those runtime values while declaring this machine's defaults and packages.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "pi-settings.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq --argjson declared "$declared" '
+  (.packages // []) as $existing
+  | . + ($declared | del(.packages))
+  | .packages = ($existing + [
+      ($declared.packages // [])[]
+      | select(. as $package | ($existing | index($package) | not))
+    ])
+'
