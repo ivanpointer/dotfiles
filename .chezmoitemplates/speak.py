@@ -15,6 +15,7 @@ import urllib.request
 
 
 MODEL = "deepgram/flux-tts:free"
+SPEECH_SPEED = 1.25
 SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech"
 STATE_DIR = os.path.join(os.path.expanduser("~"), ".local", "state", "speak")
 SESSIONS_PATH = os.path.join(STATE_DIR, "sessions.json")
@@ -170,7 +171,7 @@ def synthesize(text, voice):
         return None, "none", 0
     spoken_text = text if text.rstrip().endswith((".", "!", "?")) else text + "."
     body = json.dumps({"model": MODEL, "input": spoken_text, "voice": voice,
-                       "response_format": "mp3"}).encode("utf-8")
+                       "response_format": "mp3", "speed": SPEECH_SPEED}).encode("utf-8")
     request = urllib.request.Request(
         SPEECH_URL, data=body,
         headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
