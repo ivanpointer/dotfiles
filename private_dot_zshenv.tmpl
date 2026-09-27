@@ -1,2 +1,7 @@
+{{- $openAIAPIKey := onepasswordRead "op://Personal/OpenAI API Key - Personal/api key" | trim -}}
+export OPENAI_API_KEY="{{ $openAIAPIKey }}"
+export GRAFT_API_KEY="{{ $openAIAPIKey }}"
+export GRAFT_PROVIDER="openai"
+export GRAFT_MODEL="gpt-6-luna"
 export OPENROUTER_API_KEY="{{ onepasswordRead "op://Personal/OpenRouter Chatbot Says API Key/password" | trim }}"
 export JEV_OPENROUTER_API_KEY="{{ onepasswordRead "op://Personal/ydgtxde4lgt3pwiqw57vv5yixu/credential" | trim }}"
