@@ -13,6 +13,11 @@ CHEZMOI_DECLARED
 
 printf '%s' "$input" | jq --argjson declared "$declared" '
   .["$schema"] = ($declared["$schema"] // .["$schema"])
+  | (.plugin // []) as $existingPlugins
+  | .plugin = ($existingPlugins + [
+      ($declared.plugin // [])[]
+      | select(. as $plugin | ($existingPlugins | index($plugin) | not))
+    ])
   | .provider = ((.provider // {}) + ($declared.provider // {}))
   | .mcp = ((.mcp // {}) + ($declared.mcp // {}))
 '

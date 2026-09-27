@@ -1,6 +1,9 @@
 {{- $openBrainMcpKey := onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" -}}
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "{{ .chezmoi.homeDir }}/.config/opencode/plugins/say-alert.ts"
+  ],
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",

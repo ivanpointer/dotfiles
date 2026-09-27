@@ -13,7 +13,7 @@ CHEZMOI_DECLARED
 
 printf '%s' "$input" | jq \
   --argjson declared "$declared" \
-  --argjson markers '["# notchbar-agents-codex-hook", "# workscribe-managed-codex-hook"]' \
+  --argjson markers '["# notchbar-agents-codex-hook", "# workscribe-managed-codex-hook", "# completion-alert-codex-hook"]' \
   --argjson legacyPrefixes '["workmux set-window-status waiting", "workmux set-window-status working", "workmux set-window-status done", "workmux register-agent"]' '
   def marked($hook):
     ($hook.command // "") as $command

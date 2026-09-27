@@ -1,0 +1,130 @@
+#!/bin/sh
+# Hermes alert shim SHA-256: {{ include "private_dot_hermes/private_hooks/executable_hermes-say-alert.sh" | sha256sum }}
+# Shell hooks are runtime configuration, so register this deployed script after
+# chezmoi has created it.  Hermes config set cannot express a list of mappings;
+# ruamel's round-trip API preserves comments and the pinned indent avoids
+# reformatting unrelated sequences.
+set -eu
+
+hermes_bin="$(command -v hermes)"
+python_bin="$(head -1 "$hermes_bin" | sed 's/^#!//')"
+hook_path="${HOME}/.hermes/hooks/hermes-say-alert.sh"
+config_path="${HOME}/.hermes/config.yaml"
+allowlist_path="${HOME}/.hermes/shell-hooks-allowlist.json"
+
+[ -x "$hook_path" ] || {
+  echo "Hermes alert hook is not deployed: $hook_path" >&2
+  exit 1
+}
+
+"$python_bin" - "$config_path" "$allowlist_path" "$hook_path" <<'PY'
+import datetime as dt
+import io
+import json
+import os
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap, CommentedSeq
+
+config_path, allowlist_path, hook_path = map(Path, sys.argv[1:])
+config_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+
+yaml = YAML(typ="rt")
+yaml.indent(mapping=2, sequence=4, offset=2)
+
+original = config_path.read_bytes() if config_path.exists() else b""
+backup_path = None
+if config_path.exists():
+    backup = tempfile.NamedTemporaryFile(
+        prefix="config.yaml.before-hermes-alert.", dir=config_path.parent, delete=False
+    )
+    backup.close()
+    backup_path = Path(backup.name)
+    shutil.copy2(config_path, backup_path)
+
+if original:
+    loaded = yaml.load(original.decode("utf-8"))
+    verify = io.StringIO()
+    yaml.dump(loaded, verify)
+    if verify.getvalue().encode("utf-8") != original:
+        raise SystemExit("refusing to rewrite config.yaml: ruamel round-trip changed unrelated bytes")
+else:
+    loaded = CommentedMap()
+if loaded is None:
+    loaded = CommentedMap()
+if not isinstance(loaded, CommentedMap):
+    raise SystemExit("refusing to rewrite config.yaml: root is not a mapping")
+
+hooks = loaded.get("hooks")
+if hooks is None:
+    hooks = CommentedMap()
+    loaded["hooks"] = hooks
+if not isinstance(hooks, CommentedMap):
+    raise SystemExit("refusing to rewrite config.yaml: hooks is not a mapping")
+
+entries = hooks.get("on_session_end")
+if entries is None:
+    entries = CommentedSeq()
+    hooks["on_session_end"] = entries
+if not isinstance(entries, (list, CommentedSeq)):
+    raise SystemExit("refusing to rewrite config.yaml: hooks.on_session_end is not a list")
+
+existing = next(
+    (entry for entry in entries if isinstance(entry, dict) and entry.get("command") == str(hook_path)),
+    None,
+)
+config_changed = False
+if existing is None:
+    entry = CommentedMap()
+    entry["command"] = str(hook_path)
+    entry["timeout"] = 15
+    entries.append(entry)
+    config_changed = True
+elif existing.get("timeout") != 15:
+    existing["timeout"] = 15
+    config_changed = True
+
+rendered = io.StringIO()
+yaml.dump(loaded, rendered)
+new_config = rendered.getvalue().encode("utf-8")
+if new_config != original:
+    config_path.write_bytes(new_config)
+if backup_path:
+    backup_path.unlink(missing_ok=True)
+
+allowlist = {"approvals": []}
+if allowlist_path.exists():
+    try:
+        candidate = json.loads(allowlist_path.read_text())
+        if isinstance(candidate, dict):
+            allowlist = candidate
+    except Exception:
+        pass
+approvals = allowlist.get("approvals")
+if not isinstance(approvals, list):
+    approvals = []
+    allowlist["approvals"] = approvals
+
+approved = any(
+    isinstance(entry, dict)
+    and entry.get("event") == "on_session_end"
+    and entry.get("command") == str(hook_path)
+    for entry in approvals
+)
+if not approved:
+    mtime = dt.datetime.fromtimestamp(hook_path.stat().st_mtime, dt.timezone.utc)
+    now = dt.datetime.now(dt.timezone.utc)
+    approvals.append({
+        "event": "on_session_end",
+        "command": str(hook_path),
+        "approved_at": now.isoformat().replace("+00:00", "Z"),
+        "script_mtime_at_approval": mtime.isoformat().replace("+00:00", "Z"),
+    })
+    allowlist_path.write_text(json.dumps(allowlist, indent=2) + "\n")
+
+print("Hermes completion alert " + ("registered" if config_changed or not approved else "already-registered"))
+PY
