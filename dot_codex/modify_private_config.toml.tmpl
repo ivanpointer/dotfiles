@@ -1,20 +1,38 @@
 #!/bin/sh
-# Preserve locally selected Codex model settings while managing all other config.
+# Codex rewrites project trust, plugins, marketplaces, hook trust, memories, and
+# MCP entries added by `codex mcp add`. Keep that runtime state and replace only
+# chezmoi-owned root settings and keyed MCP tables.
 set -eu
 
 managed_config="$(mktemp "${TMPDIR:-/tmp}/chezmoi-codex-config.XXXXXX")"
-trap 'rm -f "$managed_config"' EXIT HUP INT TERM
+managed_roots="$(mktemp "${TMPDIR:-/tmp}/chezmoi-codex-roots.XXXXXX")"
+managed_mcp="$(mktemp "${TMPDIR:-/tmp}/chezmoi-codex-mcp.XXXXXX")"
+trap 'rm -f "$managed_config" "$managed_roots" "$managed_mcp"' EXIT HUP INT TERM
 
 cat >"$managed_config" <<'CHEZMOI_MANAGED_CONFIG'
-{{ template "codex-config.toml.tmpl" . }}
+{{ template "codex-managed-config.toml.tmpl" . }}
 CHEZMOI_MANAGED_CONFIG
 
-# stdin is the existing ~/.codex/config.toml. Retain only its top-level model
-# choices, then append the fully managed config body.
+# TOML root keys must appear before any table. Split the partial declaration so
+# root settings lead the target while keyed MCP tables can be safely appended.
+awk '/^[[:space:]]*\[/ { exit } { print }' "$managed_config" >"$managed_roots"
+awk 'found || /^[[:space:]]*\[/ { found = 1; print }' "$managed_config" >"$managed_mcp"
+
+# stdin is the existing ~/.codex/config.toml. Remove our root keys and our MCP
+# table hierarchy (leading whitespace is valid when Codex re-emits tables), then
+# append the declared partial configuration. Every other line passes through.
 awk '
+  FILENAME == ARGV[1] { print; next }
   FILENAME == "-" {
-    if ($0 ~ /^model = / || $0 ~ /^model_reasoning_effort = /) print
+    if ($0 ~ /^[[:space:]]*\[/) {
+      skip = ($0 ~ /^[[:space:]]*\[mcp_servers\.(obsidian-docs-hypknowledge|azure-devops-hypknowledge|laravel-boost-tracker|goland|open-brain|1password)(\.|\])/)
+    }
+    if (skip) next
+    if ($0 ~ /^[[:space:]]*(approval_policy|sandbox_mode|permission_mode|notify|personality|approvals_reviewer)[[:space:]]*=/) next
+    if (!emitted && $0 ~ /^[[:space:]]*$/) next
+    print
+    emitted = 1
     next
   }
-  { print }
-' - "$managed_config"
+  FILENAME == ARGV[3] { print }
+' "$managed_roots" - "$managed_mcp"

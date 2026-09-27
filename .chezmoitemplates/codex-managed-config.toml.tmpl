@@ -1,0 +1,72 @@
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+permission_mode = "auto-edit"
+notify = ["/Users/ivanpointer/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+personality = "pragmatic"
+approvals_reviewer = "guardian_subagent"
+
+[mcp_servers.obsidian-docs-hypknowledge]
+command = "npx"
+args = ["-y", "@bitbonsai/mcpvault@latest", "/Users/ivanpointer/Source/hypknowledge/docs"]
+
+[mcp_servers.obsidian-docs-hypknowledge.tools.search_notes]
+approval_mode = "approve"
+
+[mcp_servers.obsidian-docs-hypknowledge.tools.read_multiple_notes]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge]
+command = "npx"
+args = ["-y", "@azure-devops/mcp", "Hypknowledge", "--authentication", "azcli", "-d", "core", "work", "work-items", "repositories", "search"]
+
+[mcp_servers.azure-devops-hypknowledge.env]
+ado_mcp_project = "hipaa-modernization"
+
+[mcp_servers.azure-devops-hypknowledge.tools.search_workitem]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.wit_update_work_item]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.wit_query_by_wiql]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.wit_add_child_work_items]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.wit_update_work_items_batch]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.wit_create_work_item]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.wit_get_work_item]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.wit_add_work_item_comment]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.repo_list_pull_requests_by_repo_or_project]
+approval_mode = "approve"
+
+[mcp_servers.azure-devops-hypknowledge.tools.core_list_projects]
+approval_mode = "approve"
+
+[mcp_servers.laravel-boost-tracker]
+command = "devbox"
+args = ["run", "-c", "/Users/ivanpointer/Source/hypknowledge/github-hypknowledge/tracker", "--env", "APP_ENV=local", "--env", "APP_DEBUG=true", "--env", "CACHE_STORE=array", "php", "/Users/ivanpointer/Source/hypknowledge/github-hypknowledge/tracker/artisan", "boost:mcp"]
+
+[mcp_servers.laravel-boost-tracker.tools.search-docs]
+approval_mode = "approve"
+
+[mcp_servers.goland]
+url = "http://127.0.0.1:64342/stream"
+
+[mcp_servers.open-brain]
+url = "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp"
+
+[mcp_servers.open-brain.http_headers]
+x-brain-key = "{{ $openBrainMcpKey }}"
+
+[mcp_servers.1password]
+command = "/Applications/1Password.app/Contents/MacOS/1password-mcp"
