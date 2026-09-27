@@ -1,0 +1,40 @@
+#!/bin/sh
+# Keep tool-added Codex hooks. Remove only our command hooks before re-adding
+# the declared groups, so shared groups retain foreign hooks.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "codex-hooks.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq \
+  --argjson declared "$declared" \
+  --argjson markers '["# notchbar-agents-codex-hook", "# workscribe-managed-codex-hook"]' \
+  --argjson legacyPrefixes '["workmux set-window-status waiting", "workmux set-window-status working", "workmux set-window-status done", "workmux register-agent"]' '
+  def marked($hook):
+    ($hook.command // "") as $command
+    | $markers | any(. as $marker | $command | contains($marker));
+  def legacy($hook):
+    ($hook.command // "") as $command
+    | $legacyPrefixes | any(. as $prefix | $command | startswith($prefix));
+  def ours($hook): marked($hook) or legacy($hook);
+  def drop_declared:
+    with_entries(
+      .value |= (
+        map(
+          .hooks = ((.hooks // []) | map(select(ours(.) | not)))
+          | select((.hooks | length) > 0)
+        )
+        | select(length > 0)
+      )
+    );
+  .hooks = ((.hooks // {}) | drop_declared)
+  | reduce ($declared.hooks | to_entries[]) as $event
+      (.;
+        .hooks[$event.key] = ($event.value + (.hooks[$event.key] // []))
+      )
+'
