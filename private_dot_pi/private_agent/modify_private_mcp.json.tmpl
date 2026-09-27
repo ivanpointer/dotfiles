@@ -1,0 +1,16 @@
+#!/bin/sh
+# Keep pi MCP registrations added outside chezmoi; overwrite only our keyed
+# registrations so this global registry is safe for future installers.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "pi-mcp.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq --argjson declared "$declared" '
+  .mcpServers = ((.mcpServers // {}) + ($declared.mcpServers // {}))
+'
