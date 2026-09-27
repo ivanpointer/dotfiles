@@ -1,0 +1,16 @@
+#!/bin/sh
+# ~/.claude.json is runtime-owned. Keep its machine/session state and foreign
+# MCP registrations; chezmoi owns only the entries rendered below.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "claude-mcp.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq --argjson declared "$declared" '
+  .mcpServers = ((.mcpServers // {}) + ($declared.mcpServers // {}))
+'
