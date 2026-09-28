@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const ALERT_SCRIPT = `${process.env.HOME}/.codex/hooks/codex-say-alert.sh`;
+const ALERT_SCRIPT = `${process.env.HOME}/.local/bin/agent-completion-alert`;
 
 export default function (pi: ExtensionAPI) {
   pi.on("agent_end", (_event, ctx) => {

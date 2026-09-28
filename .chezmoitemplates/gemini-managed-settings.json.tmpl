@@ -1,0 +1,52 @@
+{{- $openBrainMcpKey := onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" -}}
+{
+  "mcpServers": {
+    "open-brain": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp",
+        "--header",
+        "x-brain-key:${BRAIN_KEY}"
+      ],
+      "env": { "BRAIN_KEY": "{{ $openBrainMcpKey }}" }
+    },
+    "1password": {
+      "command": "/Applications/1Password.app/Contents/MacOS/1password-mcp"
+    },
+    "graft": {
+      "command": "{{ .chezmoi.homeDir }}/.local/bin/graft",
+      "args": ["mcp"]
+    }
+  },
+  "hooks": {
+    "AfterAgent": [
+      {
+        "hooks": [{
+          "command": "SAY_ALERT_SESSION_PREFIX=gemini \"{{ .chezmoi.homeDir }}/.local/bin/agent-completion-alert\" # completion-alert-shared-hook",
+          "type": "command"
+        }]
+      },
+      {
+        "hooks": [{ "command": "workmux set-window-status done", "type": "command" }]
+      }
+    ],
+    "AfterTool": [{
+      "hooks": [{ "command": "workmux set-window-status working", "type": "command" }]
+    }],
+    "BeforeAgent": [{
+      "hooks": [{ "command": "workmux set-window-status working", "type": "command" }]
+    }],
+    "Notification": [{
+      "matcher": "ToolPermission",
+      "hooks": [{ "command": "workmux set-window-status waiting", "type": "command" }]
+    }],
+    "SessionEnd": [{
+      "hooks": [{ "command": "workmux set-window-status done", "type": "command" }]
+    }],
+    "SessionStart": [{
+      "hooks": [{ "command": "workmux register-agent", "type": "command" }]
+    }]
+  }
+}

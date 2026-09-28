@@ -1,7 +1,9 @@
 #!/bin/sh
 # Hermes alert shim SHA-256: {{ include "private_dot_hermes/private_hooks/executable_hermes-say-alert.sh" | sha256sum }}
-# Shell hooks are runtime configuration, so register this deployed script after
-# chezmoi has created it.  Hermes config set cannot express a list of mappings;
+# Graft wrapper SHA-256: {{ include "private_dot_local/bin/executable_graft" | sha256sum }}
+# Shell hooks and shared MCP servers are runtime configuration, so register the
+# deployed entries after chezmoi has created them. Hermes config set cannot
+# express these nested mappings;
 # ruamel's round-trip API preserves comments and the pinned indent avoids
 # reformatting unrelated sequences.
 set -eu
@@ -11,13 +13,14 @@ python_bin="$(head -1 "$hermes_bin" | sed 's/^#!//')"
 hook_path="${HOME}/.hermes/hooks/hermes-say-alert.sh"
 config_path="${HOME}/.hermes/config.yaml"
 allowlist_path="${HOME}/.hermes/shell-hooks-allowlist.json"
+open_brain_key='{{ onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" | trim }}'
 
 [ -x "$hook_path" ] || {
   echo "Hermes alert hook is not deployed: $hook_path" >&2
   exit 1
 }
 
-"$python_bin" - "$config_path" "$allowlist_path" "$hook_path" <<'PY'
+"$python_bin" - "$config_path" "$allowlist_path" "$hook_path" "$open_brain_key" <<'PY'
 import datetime as dt
 import io
 import json
@@ -30,7 +33,10 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
-config_path, allowlist_path, hook_path = map(Path, sys.argv[1:])
+config_path = Path(sys.argv[1])
+allowlist_path = Path(sys.argv[2])
+hook_path = Path(sys.argv[3])
+open_brain_key = sys.argv[4]
 config_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
 
 yaml = YAML(typ="rt")
@@ -88,6 +94,59 @@ elif existing.get("timeout") != 15:
     existing["timeout"] = 15
     config_changed = True
 
+mcp_servers = loaded.get("mcp_servers")
+if mcp_servers is None:
+    mcp_servers = CommentedMap()
+    loaded["mcp_servers"] = mcp_servers
+if not isinstance(mcp_servers, CommentedMap):
+    raise SystemExit("refusing to rewrite config.yaml: mcp_servers is not a mapping")
+
+graft = mcp_servers.get("graft")
+if graft is None:
+    graft = CommentedMap()
+    mcp_servers["graft"] = graft
+if not isinstance(graft, CommentedMap):
+    raise SystemExit("refusing to rewrite config.yaml: mcp_servers.graft is not a mapping")
+
+graft_command = str(Path.home() / ".local" / "bin" / "graft")
+if graft.get("command") != graft_command:
+    graft["command"] = graft_command
+    config_changed = True
+if list(graft.get("args") or []) != ["mcp"]:
+    graft["args"] = CommentedSeq(["mcp"])
+    config_changed = True
+
+onepassword = mcp_servers.get("1password")
+if onepassword is None:
+    onepassword = CommentedMap()
+    mcp_servers["1password"] = onepassword
+if not isinstance(onepassword, CommentedMap):
+    raise SystemExit("refusing to rewrite config.yaml: mcp_servers.1password is not a mapping")
+onepassword_command = "/Applications/1Password.app/Contents/MacOS/1password-mcp"
+if onepassword.get("command") != onepassword_command:
+    onepassword["command"] = onepassword_command
+    config_changed = True
+
+open_brain = mcp_servers.get("open-brain")
+if open_brain is None:
+    open_brain = CommentedMap()
+    mcp_servers["open-brain"] = open_brain
+if not isinstance(open_brain, CommentedMap):
+    raise SystemExit("refusing to rewrite config.yaml: mcp_servers.open-brain is not a mapping")
+open_brain_url = "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp"
+if open_brain.get("url") != open_brain_url:
+    open_brain["url"] = open_brain_url
+    config_changed = True
+headers = open_brain.get("headers")
+if headers is None:
+    headers = CommentedMap()
+    open_brain["headers"] = headers
+if not isinstance(headers, CommentedMap):
+    raise SystemExit("refusing to rewrite config.yaml: mcp_servers.open-brain.headers is not a mapping")
+if headers.get("x-brain-key") != open_brain_key:
+    headers["x-brain-key"] = open_brain_key
+    config_changed = True
+
 rendered = io.StringIO()
 yaml.dump(loaded, rendered)
 new_config = rendered.getvalue().encode("utf-8")
@@ -126,5 +185,5 @@ if not approved:
     })
     allowlist_path.write_text(json.dumps(allowlist, indent=2) + "\n")
 
-print("Hermes completion alert " + ("registered" if config_changed or not approved else "already-registered"))
+print("Hermes harness wiring " + ("registered" if config_changed or not approved else "already-registered"))
 PY

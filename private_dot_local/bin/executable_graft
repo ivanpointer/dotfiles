@@ -1,0 +1,16 @@
+#!/bin/sh
+# Stable machine entrypoint for every shell and agent harness. GUI-launched
+# harnesses do not inherit .zshenv, so load the same private Graft/Jev settings
+# here before handing off to the dogfood package pinned by nix-darwin.
+set -eu
+
+env_file="${XDG_CONFIG_HOME:-${HOME}/.config}/graft/environment"
+[ ! -r "$env_file" ] || . "$env_file"
+
+real_graft="${GRAFT_REAL_BIN:-${HOME}/.local/share/npm-global/bin/graft}"
+if [ ! -x "$real_graft" ]; then
+  echo "graft wrapper: installed binary not found at $real_graft" >&2
+  exit 127
+fi
+
+exec "$real_graft" "$@"

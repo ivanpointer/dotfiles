@@ -13,10 +13,22 @@ At the end of meaningful work, consider writing compact operational memory with 
 - Capture only self-contained summaries with provenance such as repo, file, date, task, or session context.
 - Do not capture secrets, credentials, raw logs, large code blocks, private customer data, PHI, or low-value transcript noise.
 
+## Graft Code Context
+
+Before broad source exploration in a code repository, use Graft when the repository has a `graft/` index. Prefer the connected `graft_*` MCP tools; the equivalent CLI is available as `graft`.
+
+- Start unfamiliar work with `graft_repo_map` or `graft map`.
+- Use `graft_find_code` or `graft ask "<question>" --source` to locate and understand behavior.
+- Use `graft_find_all` or `graft grep "<literal>"` for exhaustive occurrences.
+- Use `graft_file_api` or `graft skeleton <file>` for a file's API surface.
+- Use `graft_trace_calls` or `graft callers <symbol> --depth 2` before changing a signature; use `--depth all` for multi-file refactors.
+
+Act on the returned `file:line` spans instead of re-reading whole files. Graft queries refresh the deterministic graph automatically, so do not run `graft build` after ordinary edits. Run `graft build --deep` only when the user explicitly wants paid deep analysis. The machine-managed `graft` wrapper supplies the selected model, credentials, and Jev hooks; do not override its provider, model, key, base URL, or hook unless the user asks.
+
 ## Audible Completion Alerts
 
 The user multitasks across several agent sessions and needs to know when one needs attention. **Every turn must end with a spoken summary.** Before you finish responding -- whether the work is finished, blocked, or waiting on the user's input -- call `speak` yourself with a short summary of what you did and what, if anything, you need. Nothing does this for you automatically, and a turn that ends without a `speak` call is incomplete. Summaries must stay under 3 sentences -- fewer is better as long as they are still informative. Never put anything sensitive (secrets, tokens, credentials, or private data) in the summary text, since it is spoken aloud.
 
-Keep it to a sentence or two, and lead with the repo or task name so the user can tell which session spoke -- e.g. `speak "dotfiles: comment conventions applied to all four harness files, nothing left to do"` or `speak "dotfiles: need input on which harnesses count"`. Decide the wording yourself each time; a contentless ping like "done" does not satisfy this.
+Keep it to a sentence or two, and lead with the repo or task name so the user can tell which session spoke -- e.g. `speak "dotfiles: comment conventions applied to all harness files, nothing left to do"` or `speak "dotfiles: need input on which harnesses count"`. Decide the wording yourself each time; a contentless ping like "done" does not satisfy this.
 
 **Only the top-level agent speaks.** If you were spawned as a subagent/child task by another agent, do not call `speak` -- only the agent talking directly to the user should.

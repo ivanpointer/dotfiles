@@ -7,7 +7,7 @@
 # serialized playback instead of implementing another TTS path.
 set -u
 
-ALERT_SCRIPT="${HOME}/.codex/hooks/codex-say-alert.sh"
+ALERT_SCRIPT="${HOME}/.local/bin/agent-completion-alert"
 LOG="${HOME}/.hermes/hooks/hermes-say-alert.log"
 
 payload="$(cat 2>/dev/null || true)"

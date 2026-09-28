@@ -35,6 +35,14 @@
         "/Applications/1Password.app/Contents/MacOS/1password-mcp"
       ],
       "enabled": true
+    },
+    "graft": {
+      "type": "local",
+      "command": [
+        "{{ .chezmoi.homeDir }}/.local/bin/graft",
+        "mcp"
+      ],
+      "enabled": true
     }
   }
 }

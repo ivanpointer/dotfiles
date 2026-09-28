@@ -1,0 +1,36 @@
+#!/bin/sh
+# Claude owns runtime settings in this file. Chezmoi replaces only its marked
+# status/workmux/completion/Graft hook commands and preserves every foreign key.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "claude-hooks.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq \
+  --argjson declared "$declared" \
+  --argjson markers '["# notchbar-agents-claude-hook", "# completion-alert-shared-hook", "# chezmoi-graft-hook"]' \
+  --argjson legacyPrefixes '["workmux set-window-status waiting", "workmux set-window-status working", "workmux set-window-status done", "workmux register-agent"]' '
+  def ours($hook):
+    ($hook.command // "") as $command
+    | (($markers | any(. as $marker | $command | contains($marker)))
+       or ($legacyPrefixes | any(. as $prefix | $command | startswith($prefix)))
+       or ($command | contains("graft-hooks.cjs")));
+  def drop_managed:
+    with_entries(
+      .value |= (
+        map(
+          .hooks = ((.hooks // []) | map(select(ours(.) | not)))
+          | select((.hooks | length) > 0)
+        )
+        | select(length > 0)
+      )
+    );
+  .hooks = ((.hooks // {}) | drop_managed)
+  | reduce ($declared.hooks | to_entries[]) as $event
+      (.; .hooks[$event.key] = ($event.value + (.hooks[$event.key] // [])))
+'

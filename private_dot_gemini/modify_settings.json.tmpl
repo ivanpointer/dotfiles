@@ -1,0 +1,36 @@
+#!/bin/sh
+# Gemini rewrites settings.json. Own the shared Graft, Open Brain, and 1Password
+# MCP keys plus marked workmux/completion hooks; preserve every other setting.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "gemini-managed-settings.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq \
+  --argjson declared "$declared" \
+  --argjson markers '["# completion-alert-shared-hook"]' \
+  --argjson legacyPrefixes '["workmux set-window-status waiting", "workmux set-window-status working", "workmux set-window-status done", "workmux register-agent"]' '
+  def ours($hook):
+    ($hook.command // "") as $command
+    | (($markers | any(. as $marker | $command | contains($marker)))
+       or ($legacyPrefixes | any(. as $prefix | $command | startswith($prefix))));
+  def drop_managed:
+    with_entries(
+      .value |= (
+        map(
+          .hooks = ((.hooks // []) | map(select(ours(.) | not)))
+          | select((.hooks | length) > 0)
+        )
+        | select(length > 0)
+      )
+    );
+  .mcpServers = ((.mcpServers // {}) + ($declared.mcpServers // {}))
+  | .hooks = ((.hooks // {}) | drop_managed)
+  | reduce ($declared.hooks | to_entries[]) as $event
+      (.; .hooks[$event.key] = ($event.value + (.hooks[$event.key] // [])))
+'

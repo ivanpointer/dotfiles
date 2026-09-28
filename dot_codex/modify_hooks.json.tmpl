@@ -13,7 +13,7 @@ CHEZMOI_DECLARED
 
 printf '%s' "$input" | jq \
   --argjson declared "$declared" \
-  --argjson markers '["# notchbar-agents-codex-hook", "# workscribe-managed-codex-hook", "# completion-alert-codex-hook"]' \
+  --argjson markers '["# notchbar-agents-codex-hook", "# workscribe-managed-codex-hook", "# completion-alert-codex-hook", "# completion-alert-shared-hook", "# chezmoi-graft-hook"]' \
   --argjson legacyPrefixes '["workmux set-window-status waiting", "workmux set-window-status working", "workmux set-window-status done", "workmux register-agent"]' '
   def marked($hook):
     ($hook.command // "") as $command
@@ -21,7 +21,10 @@ printf '%s' "$input" | jq \
   def legacy($hook):
     ($hook.command // "") as $command
     | $legacyPrefixes | any(. as $prefix | $command | startswith($prefix));
-  def ours($hook): marked($hook) or legacy($hook);
+  def ours($hook):
+    marked($hook)
+    or legacy($hook)
+    or (($hook.command // "") | contains("graft-hooks.cjs"));
   def drop_declared:
     with_entries(
       .value |= (

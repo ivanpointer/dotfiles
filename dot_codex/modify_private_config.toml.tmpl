@@ -25,7 +25,7 @@ awk '
   FILENAME == ARGV[1] { print; next }
   FILENAME == "-" {
     if ($0 ~ /^[[:space:]]*\[/) {
-      skip = ($0 ~ /^[[:space:]]*\[mcp_servers\.(obsidian-docs-hypknowledge|azure-devops-hypknowledge|laravel-boost-tracker|goland|open-brain|1password)(\.|\])/)
+      skip = ($0 ~ /^[[:space:]]*\[mcp_servers\.(obsidian-docs-hypknowledge|azure-devops-hypknowledge|laravel-boost-tracker|goland|open-brain|1password|graft)(\.|\])/)
     }
     if (skip) next
     if ($0 ~ /^[[:space:]]*(approval_policy|sandbox_mode|permission_mode|notify|personality|approvals_reviewer)[[:space:]]*=/) next

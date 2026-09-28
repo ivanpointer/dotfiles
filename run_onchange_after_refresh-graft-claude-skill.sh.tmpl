@@ -1,0 +1,28 @@
+#!/bin/sh
+# Graft dogfood build: {{ .graftDogfoodCommit }}
+# Keep Claude's global Graft skill byte-for-byte aligned with the installed
+# package instead of maintaining a second copy in dotfiles.
+set -eu
+
+module="${HOME}/.local/share/npm-global/lib/node_modules/@nanonets/graft/dist/claude/skill-template.js"
+target="${HOME}/.claude/skills/graft/SKILL.md"
+
+[ -f "$module" ] || {
+  echo "Graft skill module not installed: $module" >&2
+  exit 1
+}
+
+mkdir -p "$(dirname "$target")"
+tmp="$(mktemp "${TMPDIR:-/tmp}/graft-skill.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT HUP INT TERM
+
+node --input-type=module -e '
+  import { pathToFileURL } from "node:url";
+  const modulePath = process.argv[1];
+  const loaded = await import(pathToFileURL(modulePath).href);
+  process.stdout.write(loaded.skillTemplate());
+' "$module" >"$tmp"
+
+chmod 0644 "$tmp"
+mv "$tmp" "$target"
+trap - EXIT HUP INT TERM

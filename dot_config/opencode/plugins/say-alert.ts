@@ -1,7 +1,7 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import { spawn } from "node:child_process";
 
-const ALERT_SCRIPT = `${process.env.HOME}/.codex/hooks/codex-say-alert.sh`;
+const ALERT_SCRIPT = `${process.env.HOME}/.local/bin/agent-completion-alert`;
 
 function notify(payload: Record<string, unknown>): void {
   const child = spawn(ALERT_SCRIPT, [], {
