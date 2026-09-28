@@ -13,17 +13,17 @@ At the end of meaningful work, consider writing compact operational memory with 
 - Capture only self-contained summaries with provenance such as repo, file, date, task, or session context.
 - Do not capture secrets, credentials, raw logs, large code blocks, private customer data, PHI, or low-value transcript noise.
 
-## Graft Code Context
+## Graft-First Repository Context
 
-Before broad source exploration in a code repository, use Graft when the repository has a `graft/` index. Prefer the connected `graft_*` MCP tools; the equivalent CLI is available as `graft`.
+For every task that touches a code repository—including familiar repos, small changes, reviews, and child-agent work—use Graft before broad source exploration or implementation. Graft is the default context layer, not an optional optimization. Prefer the connected `graft_*` MCP tools; the equivalent CLI is available as `graft`.
 
-- Start unfamiliar work with `graft_repo_map` or `graft map`.
-- Use `graft_find_code` or `graft ask "<question>" --source` to locate and understand behavior.
-- Use `graft_find_all` or `graft grep "<literal>"` for exhaustive occurrences.
-- Use `graft_file_api` or `graft skeleton <file>` for a file's API surface.
-- Use `graft_trace_calls` or `graft callers <symbol> --depth 2` before changing a signature; use `--depth all` for multi-file refactors.
+- At repository entry, run `graft_repo_map` or `graft map`. If the repository lacks a `graft/` index, run the free deterministic `graft build` before exploring source. If Graft is unavailable or fails, say so and proceed with the narrowest practical fallback.
+- Use `graft_find_code` or `graft ask "<question>" --source` to locate and understand behavior; use `graft_find_all` or `graft grep "<literal>"` for exhaustive occurrences.
+- Use `graft_file_api` or `graft skeleton <file>` before reading a file broadly, and act on returned `file:line` spans rather than scanning whole trees or files.
+- Use `graft_trace_calls` or `graft callers <symbol> --depth 2` before changing a signature; use `--depth all` for multi-file refactors. Run `graft blast` before handing off a code change when dependency impact matters.
+- Check freshness with `graft_check_freshness` or `graft check` when the index may predate the working tree. Graft queries refresh the deterministic graph after ordinary edits, so do not run `graft build` routinely; rebuild only when the index is absent or genuinely stale. Run `graft build --deep` only when the user explicitly wants paid deep analysis.
 
-Act on the returned `file:line` spans instead of re-reading whole files. Graft queries refresh the deterministic graph automatically, so do not run `graft build` after ordinary edits. Run `graft build --deep` only when the user explicitly wants paid deep analysis. The machine-managed `graft` wrapper supplies the selected model, credentials, and Jev hooks; do not override its provider, model, key, base URL, or hook unless the user asks.
+Direct `rg`, `find`, `grep`, or broad file reads are follow-up tools after Graft has narrowed the target, except for a user-named single file or when Graft is unavailable. Parent agents must put the Graft-first requirement in every child assignment. Child agents must follow it even if the brief omits it, and report the relevant Graft queries or the reason they could not use Graft in their handoff. The machine-managed `graft` wrapper supplies the selected model, credentials, and Jev hooks; do not override its provider, model, key, base URL, or hook unless the user asks.
 
 ## Audible Completion Alerts
 

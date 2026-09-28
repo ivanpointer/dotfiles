@@ -119,6 +119,15 @@
       {
         "hooks" : [
           {
+            "command" : "\"{{ .chezmoi.homeDir }}/.local/bin/graft\" agent-hook session-start # chezmoi-graft-hook",
+            "timeout" : 10000,
+            "type" : "command"
+          }
+        ]
+      },
+      {
+        "hooks" : [
+          {
             "command" : "workmux set-window-status working",
             "type" : "command"
           }
