@@ -6,7 +6,7 @@ set -eu
 
 graft_bin="${GRAFT_REAL_BIN:-/run/current-system/sw/bin/graft}"
 graft_prefix="$(CDPATH= cd -P "$(dirname "$graft_bin")/.." && pwd)"
-module="${graft_prefix}/share/graft/skill-template.js"
+module="${graft_prefix}/share/graft/claude/skill-template.js"
 target="${HOME}/.claude/skills/graft/SKILL.md"
 
 [ -f "$module" ] || {
