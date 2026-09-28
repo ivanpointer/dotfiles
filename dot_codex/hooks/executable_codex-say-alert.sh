@@ -35,19 +35,17 @@ session = str(data.get("session_id") or data.get("thread_id") or "")
 if not session:
     session = "cwd:" + cwd
 
-print(session)
-print(f"{repo} ready")
+print(f"{session}\t{cwd}\t{repo} ready")
 PY
 )"
 
-session_id="$(printf '%s\n' "$alert" | sed -n '1p')"
-phrase="$(printf '%s\n' "$alert" | sed -n '2p')"
-[ -n "$session_id" ] && [ -n "$phrase" ] || exit 0
+IFS=$'\t' read -r session_id project phrase <<< "$alert"
+[ -n "$session_id" ] && [ -n "$project" ] && [ -n "$phrase" ] || exit 0
 
 # Prefixes prevent different harnesses from sharing a voice when their native
 # session identifiers happen to collide.  Codex remains the compatibility
 # default for its existing hook entry.
 prefix="${SAY_ALERT_SESSION_PREFIX:-codex}"
-"${HOME}/.local/bin/speak" --session "${prefix}:${session_id}" "$phrase" >/dev/null 2>&1
+"${HOME}/.local/bin/speak" --session "${prefix}:${session_id}" --project "$project" "$phrase" >/dev/null 2>&1
 
 exit 0

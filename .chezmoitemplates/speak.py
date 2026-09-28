@@ -3,6 +3,7 @@
 
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 import re
@@ -19,27 +20,16 @@ SPEECH_SPEED = 1.25
 SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech"
 DEFAULT_STATE_DIR = os.path.join(os.path.expanduser("~"), ".local", "state", "speak")
 STATE_DIR = os.path.expanduser(os.environ.get("SPEAK_STATE_DIR") or DEFAULT_STATE_DIR)
-SESSIONS_PATH = os.path.join(STATE_DIR, "sessions.json")
-SESSIONS_LOCK_PATH = os.path.join(STATE_DIR, "sessions.lock")
 PLAYBACK_LOCK_PATH = os.path.join(STATE_DIR, "playback.lock")
 LOG_PATH = os.path.join(STATE_DIR, "speak.log")
 LOG_LOCK_PATH = os.path.join(STATE_DIR, "speak.log.lock")
 
 
-def env_nonnegative_int(name, default):
-    try:
-        value = int(os.environ.get(name, default))
-    except (TypeError, ValueError):
-        return default
-    return value if value >= 0 else default
-
-
-SESSION_TTL_SECONDS = env_nonnegative_int("SPEAK_SLOT_TTL_SECONDS", 4 * 60 * 60)
 MAX_CLIP_AGE_SECONDS = 120
 MAX_LOG_BYTES = 1024 * 1024
 
 # Adjacent slots deliberately alternate gender and accent.
-VOICES = (
+VOICES = [
     ("flux-alexis-en", "Samantha"),
     ("flux-colin-en", "Daniel"),
     ("flux-maeve-en", "Moira"),
@@ -52,7 +42,7 @@ VOICES = (
     ("flux-kai-en", "Aman"),
     ("flux-brooke-en", "Kathy"),
     ("flux-tanner-en", "Reed (English (US))"),
-)
+]
 VOICE_RE = re.compile(r"^flux-[a-z]+-en$")
 
 
@@ -73,63 +63,90 @@ def resolve_session(explicit_session):
     return "ppid:" + str(os.getppid())
 
 
-def read_sessions(handle):
+def main_worktree(dotgit):
+    """Resolve a linked worktree's `.git` file back to the main working tree."""
     try:
-        handle.seek(0)
-        data = json.load(handle)
-        sessions = data.get("sessions", {})
-        return sessions if isinstance(sessions, dict) else {}
-    except (OSError, ValueError, json.JSONDecodeError):
-        return {}
+        with open(dotgit) as fh:
+            pointer = fh.read().strip()
+    except Exception:
+        return None
+    if not pointer.startswith("gitdir:"):
+        return None
+    gitdir = pointer[len("gitdir:"):].strip()
+    if not os.path.isabs(gitdir):
+        gitdir = os.path.join(os.path.dirname(dotgit), gitdir)
+    parts = os.path.normpath(gitdir).split(os.sep)
+    # <main>/.git/worktrees/<name> is the only shape git writes here.
+    if "worktrees" in parts:
+        cut = parts.index("worktrees")
+        if cut >= 2 and parts[cut - 1] == ".git":
+            return os.sep.join(parts[: cut - 1]) or os.sep
+    return None
 
 
-def assign_slot(session_id):
-    ensure_state_dir()
-    now = time.time()
-    with open(SESSIONS_LOCK_PATH, "a+", encoding="utf-8") as lock:
-        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-        with open(SESSIONS_PATH, "a+", encoding="utf-8") as registry:
-            sessions = read_sessions(registry)
-            sessions = {
-                key: value for key, value in sessions.items()
-                if isinstance(value, dict)
-                and isinstance(value.get("slot"), int)
-                and value.get("slot", 0) > 0
-                and isinstance(value.get("last_seen"), (int, float))
-                and (
-                    key == session_id
-                    or now - value["last_seen"] <= SESSION_TTL_SECONDS
-                )
-            }
-            current = sessions.get(session_id)
-            if current:
-                slot = current["slot"]
-            else:
-                used = set(item["slot"] for item in sessions.values())
-                slot = 1
-                while slot in used:
-                    slot += 1
-            sessions[session_id] = {"slot": slot, "last_seen": now}
-            registry.seek(0)
-            registry.truncate()
-            json.dump({"sessions": sessions}, registry, separators=(",", ":"))
-            registry.flush()
-        fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
-    return slot
+def repo_root(start):
+    """Walk up to the enclosing repository, normalizing a linked worktree onto its
+    main working tree so every worktree of one project keeps the same voice."""
+    path = start
+    while True:
+        marker = os.path.join(path, ".git")
+        if os.path.isdir(marker):
+            return path
+        if os.path.isfile(marker):
+            return main_worktree(marker) or path
+        parent = os.path.dirname(path)
+        if parent == path:
+            return None
+        path = parent
+
+
+def resolve_project(explicit):
+    """Name the project that owns the voice.  Hooks run from their own directory, so
+    an explicit path or the harness's project variable wins over cwd.  A repository
+    is keyed on its root's basename, not its path, so a clone landing elsewhere
+    keeps its voice; two repositories sharing a name then share a voice.  Realpath
+    matters: /tmp and /private/tmp hash apart and macOS hands out both."""
+    start = None
+    for candidate in (
+        explicit,
+        os.environ.get("SPEAK_PROJECT_DIR"),
+        os.environ.get("CLAUDE_PROJECT_DIR"),
+    ):
+        if candidate and candidate.strip():
+            start = os.path.realpath(os.path.expanduser(candidate.strip()))
+            break
+    if start is None:
+        try:
+            start = os.path.realpath(os.getcwd())
+        except OSError:
+            return "unknown"
+    root = repo_root(start)
+    if root:
+        return os.path.basename(root) or root
+    return start
+
+
+def assign_slot(project):
+    """Return this project's 1-based slot from a hash of its key.  Stateless on
+    purpose: the voice is identical in every session and on every machine, with
+    nothing to persist or expire.  The cost is collisions - two unrelated projects
+    can draw the same voice, and only widening VOICES lowers those odds."""
+    digest = hashlib.sha256(project.encode("utf-8", "replace")).digest()
+    return (int.from_bytes(digest[:8], "big") % len(VOICES)) + 1
 
 
 def slot_voice(slot):
     return VOICES[(slot - 1) % len(VOICES)]
 
 
-def log_call(session_id, slot, engine, voice, http_status, synthesis_ms,
+def log_call(session_id, project, slot, engine, voice, http_status, synthesis_ms,
              lock_wait_ms, clip_age_ms, outcome, text):
     ensure_state_dir()
     safe_text = " ".join(text.split())[:80].replace('"', "'")
     line = (
-        "timestamp={:.3f} session={} slot={} engine={} voice={} http_status={} "
+        "timestamp={:.3f} session={} project={} slot={} engine={} voice={} http={} "
         "synthesis_ms={} lock_wait_ms={} clip_age_ms={} outcome={} text=\"{}\"\n"
-    ).format(time.time(), session_id.replace(" ", "_"), slot, engine, voice,
+    ).format(time.time(), session_id.replace(" ", "_"), json.dumps(project), slot, engine, voice,
              http_status, synthesis_ms, lock_wait_ms, clip_age_ms, outcome,
              safe_text)
     with open(LOG_LOCK_PATH, "a+", encoding="utf-8") as lock:
@@ -220,9 +237,9 @@ def play_clip(path):
         return "none", "no-player"
 
 
-def deliver(session_id, slot, voice, fallback_voice, text, queued_at):
+def deliver(session_id, project, slot, voice, fallback_voice, text, queued_at):
     clip, http_status, synthesis_ms = synthesize(text, voice)
-    engine = "none"
+    engine = "flux" if clip else "none"
     outcome = "failed"
     lock_started = time.monotonic()
     ensure_state_dir()
@@ -233,7 +250,7 @@ def deliver(session_id, slot, voice, fallback_voice, text, queued_at):
         if clip_age_ms > MAX_CLIP_AGE_SECONDS * 1000:
             outcome = "dropped-old"
         elif clip:
-            engine, outcome = play_clip(clip)
+            _, outcome = play_clip(clip)
         else:
             engine, outcome = play_fallback(text, fallback_voice)
         if outcome != "dropped-old":
@@ -244,7 +261,7 @@ def deliver(session_id, slot, voice, fallback_voice, text, queued_at):
             os.unlink(clip)
         except OSError:
             pass
-    log_call(session_id, slot, engine, voice, http_status, synthesis_ms,
+    log_call(session_id, project, slot, engine, voice, http_status, synthesis_ms,
              lock_wait_ms, clip_age_ms, outcome, text)
 
 
@@ -273,6 +290,7 @@ def detach_and_deliver(*args):
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--session")
+    parser.add_argument("--project")
     parser.add_argument("--voice")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("text", nargs="+")
@@ -282,19 +300,22 @@ def parse_args(argv):
 def main(argv):
     args = parse_args(argv)
     text = " ".join(args.text)
-    session_id = resolve_session(args.session)
-    slot = assign_slot(session_id)
+    session_arg = args.session
+    project_arg = args.project
+    session = resolve_session(session_arg)
+    project = resolve_project(project_arg)
+    slot = assign_slot(project)
     default_voice, fallback_voice = slot_voice(slot)
     voice = args.voice if args.voice and VOICE_RE.fullmatch(args.voice) else default_voice
     if args.dry_run:
-        print("session={} slot={} voice={}".format(session_id, slot, voice))
-        log_call(session_id, slot, "none", voice, "-", 0, 0, 0, "dry-run", text)
+        print("session={} project={} slot={} voice={}".format(session, project, slot, voice))
+        log_call(session, project, slot, "none", voice, "-", 0, 0, 0, "dry-run", text)
         return 0
     queued_at = time.time()
-    if detach_and_deliver(session_id, slot, voice, fallback_voice, text, queued_at):
+    if detach_and_deliver(session, project, slot, voice, fallback_voice, text, queued_at):
         return 0
     # A fork failure is rare, but preserve the alert instead of dropping it.
-    deliver(session_id, slot, voice, fallback_voice, text, queued_at)
+    deliver(session, project, slot, voice, fallback_voice, text, queued_at)
     return 0
 
 
