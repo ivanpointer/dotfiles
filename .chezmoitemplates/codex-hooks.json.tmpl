@@ -24,6 +24,16 @@
       {
         "hooks" : [
           {
+            "command" : "\"{{ .chezmoi.homeDir }}/.local/bin/graft\" agent-hook tool-savings # chezmoi-graft-hook",
+            "timeout" : 8000,
+            "type" : "command"
+          }
+        ],
+        "matcher" : "Bash|Shell|mcp__graft__|Read|Grep|Glob"
+      },
+      {
+        "hooks" : [
+          {
             "command" : "'\/Users\/ivanpointer\/Library\/Application Support\/Bartender\/NotchBar\/AgentStatus\/hooks\/codex-notify-hook.sh' # notchbar-agents-codex-hook",
             "type" : "command"
           }

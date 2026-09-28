@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [{
+      "matcher": "Read|Grep|Glob|Search|Shell",
+      "command": "\"{{ .chezmoi.homeDir }}/.local/bin/graft\" agent-hook cursor-post-tool # chezmoi-graft-hook"
+    }],
+    "afterMCPExecution": [{
+      "command": "\"{{ .chezmoi.homeDir }}/.local/bin/graft\" agent-hook cursor-mcp # chezmoi-graft-hook"
+    }],
+    "sessionEnd": [{
+      "command": "\"{{ .chezmoi.homeDir }}/.local/bin/graft\" agent-hook cursor-session-end # chezmoi-graft-hook"
+    }]
+  }
+}

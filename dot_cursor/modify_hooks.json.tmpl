@@ -1,0 +1,21 @@
+#!/bin/sh
+# Merge machine-wide Graft attribution hooks without replacing Cursor's own hooks.
+set -eu
+
+input="$(cat)"
+[ -n "$input" ] || input='{}'
+
+declared="$(cat <<'CHEZMOI_DECLARED'
+{{ template "cursor-hooks.json.tmpl" . }}
+CHEZMOI_DECLARED
+)"
+
+printf '%s' "$input" | jq --argjson declared "$declared" '
+  def ours:
+    if type == "object" then (.command // "") | contains("# chezmoi-graft-hook")
+    else false end;
+  .version = ($declared.version // .version)
+  | .hooks = ((.hooks // {}) | with_entries(.value |= map(select(ours | not))))
+  | reduce ($declared.hooks | to_entries[]) as $event
+      (.; .hooks[$event.key] = ($event.value + (.hooks[$event.key] // [])))
+'

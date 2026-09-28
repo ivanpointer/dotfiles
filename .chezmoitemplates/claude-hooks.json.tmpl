@@ -12,6 +12,13 @@
         "hooks": [{ "command": "workmux set-window-status waiting", "type": "command" }]
       }
     ],
+    "PostModelSwitch": [{
+      "hooks": [{
+        "command": "\"{{ .chezmoi.homeDir }}/.local/bin/graft\" agent-hook post-model-switch # chezmoi-graft-hook",
+        "timeout": 8000,
+        "type": "command"
+      }]
+    }],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit",

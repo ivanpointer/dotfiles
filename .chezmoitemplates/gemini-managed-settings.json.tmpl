@@ -32,9 +32,19 @@
         "hooks": [{ "command": "workmux set-window-status done", "type": "command" }]
       }
     ],
-    "AfterTool": [{
-      "hooks": [{ "command": "workmux set-window-status working", "type": "command" }]
-    }],
+    "AfterTool": [
+      {
+        "matcher": "mcp_graft_.*|run_shell_command",
+        "hooks": [{
+          "command": "\"{{ .chezmoi.homeDir }}/.local/bin/graft\" agent-hook gemini-after-tool # chezmoi-graft-hook",
+          "timeout": 8000,
+          "type": "command"
+        }]
+      },
+      {
+        "hooks": [{ "command": "workmux set-window-status working", "type": "command" }]
+      }
+    ],
     "BeforeAgent": [{
       "hooks": [{ "command": "workmux set-window-status working", "type": "command" }]
     }],
