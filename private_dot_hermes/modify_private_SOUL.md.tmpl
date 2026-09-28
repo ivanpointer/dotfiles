@@ -4,16 +4,16 @@
 set -eu
 
 input="$(cat)"
-declared=$(cat <<'CHEZMOI_DECLARED'
-{{ includeTemplate "harness-instructions.md.tmpl" . }}
-CHEZMOI_DECLARED
-)
 
 kept="$(printf '%s\n' "$input" | awk '
   $0 == "<!-- chezmoi:harness-rules:start -->" { skip = 1; next }
   $0 == "<!-- chezmoi:harness-rules:end -->" { skip = 0; next }
   !skip { print }
 ')"
+trimmed=$(printf '%s' "$kept" | sed -e '${/^$/d;}')
 
-printf '%s\n\n<!-- chezmoi:harness-rules:start -->\n%s\n<!-- chezmoi:harness-rules:end -->\n' \
-  "$(printf '%s' "$kept" | sed -e '${/^$/d;}')" "$declared"
+printf '%s\n\n<!-- chezmoi:harness-rules:start -->\n' "$trimmed"
+cat <<'CHEZMOI_DECLARED'
+{{ includeTemplate "harness-instructions.md.tmpl" . }}
+CHEZMOI_DECLARED
+printf '\n<!-- chezmoi:harness-rules:end -->\n'
