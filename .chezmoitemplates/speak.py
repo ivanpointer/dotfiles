@@ -19,7 +19,31 @@ MODEL = "deepgram/flux-tts:free"
 SPEECH_SPEED = 1.25
 SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech"
 DEFAULT_STATE_DIR = os.path.join(os.path.expanduser("~"), ".local", "state", "speak")
-STATE_DIR = os.path.expanduser(os.environ.get("SPEAK_STATE_DIR") or DEFAULT_STATE_DIR)
+
+
+def resolve_state_dir():
+    """Choose a private writable state directory, including in sandboxes.
+
+    The normal XDG-style location preserves logs across ordinary shells. Sandboxed
+    callers can read it but may not write it, so use their writable temporary
+    directory for the lock and diagnostic log instead of dropping the alert.
+    """
+    preferred = os.path.expanduser(os.environ.get("SPEAK_STATE_DIR") or DEFAULT_STATE_DIR)
+    fallback = os.path.join(tempfile.gettempdir(), "speak")
+    candidates = (preferred,) if preferred == fallback else (preferred, fallback)
+    for path in candidates:
+        try:
+            os.makedirs(path, mode=0o700, exist_ok=True)
+            descriptor, probe = tempfile.mkstemp(prefix=".speak-write-", dir=path)
+            os.close(descriptor)
+            os.unlink(probe)
+            return path
+        except OSError:
+            continue
+    return preferred
+
+
+STATE_DIR = resolve_state_dir()
 PLAYBACK_LOCK_PATH = os.path.join(STATE_DIR, "playback.lock")
 LOG_PATH = os.path.join(STATE_DIR, "speak.log")
 LOG_LOCK_PATH = os.path.join(STATE_DIR, "speak.log.lock")
