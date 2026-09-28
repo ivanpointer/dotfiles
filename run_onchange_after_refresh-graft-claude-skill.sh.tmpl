@@ -1,23 +1,29 @@
 #!/bin/sh
 # Graft dogfood build: {{ .graftDogfoodCommit }}
-# Keep Claude's global Graft skill byte-for-byte aligned with the installed
-# package instead of maintaining a second copy in dotfiles.
+# Keep Claude's global Graft skill and helper shims byte-for-byte aligned with
+# the installed package instead of maintaining second copies in dotfiles.
 set -eu
 
 graft_bin="${GRAFT_REAL_BIN:-/run/current-system/sw/bin/graft}"
 graft_real="$(realpath "$graft_bin")"
 graft_prefix="$(CDPATH= cd -P "$(dirname "$graft_real")/.." && pwd)"
 module="${graft_prefix}/share/graft/claude/skill-template.js"
+shim_module="${graft_prefix}/share/graft/claude/shim-template.js"
+claude_dir="${graft_prefix}/share/graft/claude"
 target="${HOME}/.claude/skills/graft/SKILL.md"
+statusline_target="${HOME}/.claude/helpers/graft-statusline.cjs"
+hooks_target="${HOME}/.claude/helpers/graft-hooks.cjs"
 
-[ -f "$module" ] || {
-  echo "Graft skill module not installed: $module" >&2
+[ -f "$module" ] && [ -f "$shim_module" ] || {
+  echo "Graft Claude modules not installed under $claude_dir" >&2
   exit 1
 }
 
-mkdir -p "$(dirname "$target")"
+mkdir -p "$(dirname "$target")" "$(dirname "$statusline_target")"
 tmp="$(mktemp "${TMPDIR:-/tmp}/graft-skill.XXXXXX")"
-trap 'rm -f "$tmp"' EXIT HUP INT TERM
+statusline_tmp="$(mktemp "${TMPDIR:-/tmp}/graft-statusline.XXXXXX")"
+hooks_tmp="$(mktemp "${TMPDIR:-/tmp}/graft-hooks.XXXXXX")"
+trap 'rm -f "$tmp" "$statusline_tmp" "$hooks_tmp"' EXIT HUP INT TERM
 
 node --input-type=module -e '
   import { pathToFileURL } from "node:url";
@@ -26,6 +32,25 @@ node --input-type=module -e '
   process.stdout.write(loaded.skillTemplate());
 ' "$module" >"$tmp"
 
+node --input-type=module -e '
+  import { pathToFileURL } from "node:url";
+  const modulePath = process.argv[1];
+  const claudeDir = process.argv[2];
+  const loaded = await import(pathToFileURL(modulePath).href);
+  process.stdout.write(loaded.statuslineShim(claudeDir));
+' "$shim_module" "$claude_dir" >"$statusline_tmp"
+
+node --input-type=module -e '
+  import { pathToFileURL } from "node:url";
+  const modulePath = process.argv[1];
+  const claudeDir = process.argv[2];
+  const loaded = await import(pathToFileURL(modulePath).href);
+  process.stdout.write(loaded.hooksShim(claudeDir));
+' "$shim_module" "$claude_dir" >"$hooks_tmp"
+
 chmod 0644 "$tmp"
+chmod 0755 "$statusline_tmp" "$hooks_tmp"
 mv "$tmp" "$target"
+mv "$statusline_tmp" "$statusline_target"
+mv "$hooks_tmp" "$hooks_target"
 trap - EXIT HUP INT TERM
