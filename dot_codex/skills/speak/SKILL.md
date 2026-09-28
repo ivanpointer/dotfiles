@@ -1,14 +1,17 @@
 ---
 name: speak
-description: Deliver a short audible completion alert without blocking the calling agent.
+description: Deliver a short audible completion alert reliably.
 ---
 
 # Speak
 
 Use `speak "short summary"` at the end of a top-level agent turn. The command
 assigns a stable voice to the project and serializes playback across the machine.
-Do not select voices in the call; use `--session` only from a harness hook that
-has its own durable session identifier.
+It sends the alert to the user's audio broker, which performs playback outside
+the caller's sandbox. Always use the standard `speak "summary"` command: no
+execution permission, flags, or sandbox-specific workaround is needed. Do not
+select voices in the call; use `--session` only from a harness hook that has its
+own durable session identifier.
 
 The project key resolves in this order: `--project DIR`, `$SPEAK_PROJECT_DIR`,
 `$CLAUDE_PROJECT_DIR`, then the current directory. The selected directory is

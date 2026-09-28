@@ -1,26 +1,21 @@
 #!/bin/sh
-# Hermes alert shim SHA-256: {{ include "private_dot_hermes/private_hooks/executable_hermes-say-alert.sh" | sha256sum }}
 # Graft wrapper SHA-256: {{ include "private_dot_local/bin/executable_graft" | sha256sum }}
-# Shell hooks and shared MCP servers are runtime configuration, so register the
-# deployed entries after chezmoi has created them. Hermes config set cannot
-# express these nested mappings;
+# Shared MCP servers are runtime configuration, so configure them after chezmoi
+# has created their binaries. Also remove the old generic completion alert: each
+# top-level agent now calls `speak` itself with its real completion summary.
+# Hermes config set cannot express these nested mappings;
 # ruamel's round-trip API preserves comments and the pinned indent avoids
 # reformatting unrelated sequences.
 set -eu
 
 hermes_bin="$(command -v hermes)"
 python_bin="$(head -1 "$hermes_bin" | sed 's/^#!//')"
-hook_path="${HOME}/.hermes/hooks/hermes-say-alert.sh"
 config_path="${HOME}/.hermes/config.yaml"
 allowlist_path="${HOME}/.hermes/shell-hooks-allowlist.json"
+old_hook_path="${HOME}/.hermes/hooks/hermes-say-alert.sh"
 open_brain_key='{{ onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" | trim }}'
 
-[ -x "$hook_path" ] || {
-  echo "Hermes alert hook is not deployed: $hook_path" >&2
-  exit 1
-}
-
-"$python_bin" - "$config_path" "$allowlist_path" "$hook_path" "$open_brain_key" <<'PY'
+"$python_bin" - "$config_path" "$allowlist_path" "$old_hook_path" "$open_brain_key" <<'PY'
 import datetime as dt
 import io
 import json
@@ -35,7 +30,7 @@ from ruamel.yaml.comments import CommentedMap, CommentedSeq
 
 config_path = Path(sys.argv[1])
 allowlist_path = Path(sys.argv[2])
-hook_path = Path(sys.argv[3])
+old_hook_path = Path(sys.argv[3])
 open_brain_key = sys.argv[4]
 config_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
 
@@ -73,26 +68,20 @@ if not isinstance(hooks, CommentedMap):
     raise SystemExit("refusing to rewrite config.yaml: hooks is not a mapping")
 
 entries = hooks.get("on_session_end")
-if entries is None:
-    entries = CommentedSeq()
-    hooks["on_session_end"] = entries
-if not isinstance(entries, (list, CommentedSeq)):
+if entries is not None and not isinstance(entries, (list, CommentedSeq)):
     raise SystemExit("refusing to rewrite config.yaml: hooks.on_session_end is not a list")
-
-existing = next(
-    (entry for entry in entries if isinstance(entry, dict) and entry.get("command") == str(hook_path)),
-    None,
-)
 config_changed = False
-if existing is None:
-    entry = CommentedMap()
-    entry["command"] = str(hook_path)
-    entry["timeout"] = 15
-    entries.append(entry)
-    config_changed = True
-elif existing.get("timeout") != 15:
-    existing["timeout"] = 15
-    config_changed = True
+if entries is not None:
+    retained = CommentedSeq(
+        entry for entry in entries
+        if not (isinstance(entry, dict) and entry.get("command") == str(old_hook_path))
+    )
+    if len(retained) != len(entries):
+        config_changed = True
+        if retained:
+            hooks["on_session_end"] = retained
+        else:
+            del hooks["on_session_end"]
 
 mcp_servers = loaded.get("mcp_servers")
 if mcp_servers is None:
@@ -168,22 +157,18 @@ if not isinstance(approvals, list):
     approvals = []
     allowlist["approvals"] = approvals
 
-approved = any(
-    isinstance(entry, dict)
-    and entry.get("event") == "on_session_end"
-    and entry.get("command") == str(hook_path)
-    for entry in approvals
-)
-if not approved:
-    mtime = dt.datetime.fromtimestamp(hook_path.stat().st_mtime, dt.timezone.utc)
-    now = dt.datetime.now(dt.timezone.utc)
-    approvals.append({
-        "event": "on_session_end",
-        "command": str(hook_path),
-        "approved_at": now.isoformat().replace("+00:00", "Z"),
-        "script_mtime_at_approval": mtime.isoformat().replace("+00:00", "Z"),
-    })
+retained_approvals = [
+    entry for entry in approvals
+    if not (
+        isinstance(entry, dict)
+        and entry.get("event") == "on_session_end"
+        and entry.get("command") == str(old_hook_path)
+    )
+]
+allowlist_changed = len(retained_approvals) != len(approvals)
+if allowlist_changed:
+    allowlist["approvals"] = retained_approvals
     allowlist_path.write_text(json.dumps(allowlist, indent=2) + "\n")
 
-print("Hermes harness wiring " + ("registered" if config_changed or not approved else "already-registered"))
+print("Hermes harness wiring " + ("removed generic completion alert" if config_changed or allowlist_changed else "already clean"))
 PY

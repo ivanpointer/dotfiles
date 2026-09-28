@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Speak a short completion alert without making the caller wait for audio."""
+"""Speak a short completion alert reliably, including from sandboxed callers."""
 
 import argparse
 import fcntl
@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -19,6 +20,10 @@ MODEL = "deepgram/flux-tts:free"
 SPEECH_SPEED = 1.25
 SPEECH_URL = "https://openrouter.ai/api/v1/audio/speech"
 DEFAULT_STATE_DIR = os.path.join(os.path.expanduser("~"), ".local", "state", "speak")
+# Sandboxed tools and launchd receive different TMPDIR values. Use the macOS
+# system temporary root so the client and the per-user broker share one queue.
+BROKER_DIR = os.path.join("/private/tmp", "speak-broker-{}".format(os.getuid()))
+QUEUE_DIR = os.path.join(BROKER_DIR, "queue")
 
 
 def resolve_state_dir():
@@ -72,6 +77,70 @@ VOICE_RE = re.compile(r"^flux-[a-z]+-en$")
 
 def ensure_state_dir():
     os.makedirs(STATE_DIR, mode=0o700, exist_ok=True)
+
+
+def ensure_queue_dir():
+    os.makedirs(QUEUE_DIR, mode=0o700, exist_ok=True)
+
+
+def enqueue(session_id, project, slot, voice, fallback_voice, text, queued_at):
+    """Atomically hand an alert to the unsandboxed per-user audio broker."""
+    ensure_queue_dir()
+    payload = {
+        "session_id": session_id,
+        "project": project,
+        "slot": slot,
+        "voice": voice,
+        "fallback_voice": fallback_voice,
+        "text": text,
+        "queued_at": queued_at,
+    }
+    name = "{:.6f}-{}-{}.json".format(time.time(), os.getpid(), secrets.token_hex(4))
+    temporary = os.path.join(QUEUE_DIR, "." + name)
+    destination = os.path.join(QUEUE_DIR, name)
+    with open(temporary, "x", encoding="utf-8") as queue_file:
+        os.chmod(temporary, 0o600)
+        json.dump(payload, queue_file, separators=(",", ":"))
+        queue_file.write("\n")
+    os.replace(temporary, destination)
+
+
+def deliver_queued_alert(path):
+    try:
+        with open(path, encoding="utf-8") as queue_file:
+            payload = json.load(queue_file)
+        deliver(
+            str(payload["session_id"]),
+            str(payload["project"]),
+            int(payload["slot"]),
+            str(payload["voice"]),
+            str(payload["fallback_voice"]),
+            str(payload["text"]),
+            float(payload["queued_at"]),
+        )
+    except (KeyError, TypeError, ValueError, OSError, json.JSONDecodeError):
+        return
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
+def run_broker():
+    """Continuously drain queue jobs in the user's unsandboxed launchd service."""
+    ensure_queue_dir()
+    while True:
+        jobs = sorted(
+            os.path.join(QUEUE_DIR, name)
+            for name in os.listdir(QUEUE_DIR)
+            if name.endswith(".json") and not name.startswith(".")
+        )
+        if not jobs:
+            time.sleep(0.2)
+            continue
+        for path in jobs:
+            deliver_queued_alert(path)
 
 
 def resolve_session(explicit_session):
@@ -289,40 +358,26 @@ def deliver(session_id, project, slot, voice, fallback_voice, text, queued_at):
              lock_wait_ms, clip_age_ms, outcome, text)
 
 
-def detach_and_deliver(*args):
-    try:
-        first_pid = os.fork()
-    except OSError:
-        return False
-    if first_pid:
-        return True
-    try:
-        os.setsid()
-        second_pid = os.fork()
-        if second_pid:
-            os._exit(0)
-        null = os.open(os.devnull, os.O_RDWR)
-        for descriptor in (0, 1, 2):
-            os.dup2(null, descriptor)
-        if null > 2:
-            os.close(null)
-        deliver(*args)
-    finally:
-        os._exit(0)
-
-
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--broker", action="store_true")
     parser.add_argument("--session")
     parser.add_argument("--project")
     parser.add_argument("--voice")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("text", nargs="+")
+    parser.add_argument("text", nargs="*")
     return parser.parse_args(argv)
 
 
 def main(argv):
     args = parse_args(argv)
+    if args.broker:
+        if args.text or args.dry_run:
+            raise SystemExit("--broker does not accept text or --dry-run")
+        run_broker()
+        return 0
+    if not args.text:
+        raise SystemExit("speak requires text")
     text = " ".join(args.text)
     session_arg = args.session
     project_arg = args.project
@@ -336,10 +391,10 @@ def main(argv):
         log_call(session, project, slot, "none", voice, "-", 0, 0, 0, "dry-run", text)
         return 0
     queued_at = time.time()
-    if detach_and_deliver(session, project, slot, voice, fallback_voice, text, queued_at):
-        return 0
-    # A fork failure is rare, but preserve the alert instead of dropping it.
-    deliver(session, project, slot, voice, fallback_voice, text, queued_at)
+    # Sandboxed callers cannot reach the macOS audio service even when `say`
+    # reports success. Queue the job for the user's launchd broker instead.
+    enqueue(session, project, slot, voice, fallback_voice, text, queued_at)
+    log_call(session, project, slot, "broker", voice, "-", 0, 0, 0, "queued", text)
     return 0
 
 
