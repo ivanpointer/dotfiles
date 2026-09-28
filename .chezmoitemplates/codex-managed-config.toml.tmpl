@@ -75,3 +75,6 @@ command = "/Applications/1Password.app/Contents/MacOS/1password-mcp"
 [mcp_servers.graft]
 command = "{{ .chezmoi.homeDir }}/.local/bin/graft"
 args = ["mcp"]
+
+[mcp_servers.graft.env]
+GRAFT_HARNESS_HOST = "codex"
