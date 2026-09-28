@@ -4,10 +4,10 @@
 set -eu
 
 input="$(cat)"
-declared="$(cat <<'CHEZMOI_DECLARED'
+declared=$(cat <<'CHEZMOI_DECLARED'
 {{ includeTemplate "harness-instructions.md.tmpl" . }}
 CHEZMOI_DECLARED
-)"
+)
 
 kept="$(printf '%s\n' "$input" | awk '
   $0 == "<!-- chezmoi:harness-rules:start -->" { skip = 1; next }
