@@ -1,7 +1,7 @@
-{{- $openAIAPIKey := onepasswordRead "op://Personal/OpenAI API Key - Personal/api key" | trim -}}
-export OPENAI_API_KEY="{{ $openAIAPIKey }}"
-export GRAFT_API_KEY="{{ $openAIAPIKey }}"
+{{- $graftOpenRouterAPIKey := onepasswordRead "op://Personal/OpenRouter API Key - Graft/credential" | trim -}}
+export GRAFT_API_KEY="{{ $graftOpenRouterAPIKey }}"
 export GRAFT_PROVIDER="openai"
-export GRAFT_MODEL="gpt-6-luna"
+export GRAFT_MODEL="openai/gpt-6-luna"
+export GRAFT_BASE_URL="https://openrouter.ai/api/v1"
 export OPENROUTER_API_KEY="{{ onepasswordRead "op://Personal/OpenRouter Chatbot Says API Key/password" | trim }}"
 export JEV_OPENROUTER_API_KEY="{{ onepasswordRead "op://Personal/ydgtxde4lgt3pwiqw57vv5yixu/credential" | trim }}"
