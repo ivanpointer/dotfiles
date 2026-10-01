@@ -21,7 +21,8 @@ printf '%s' "$input" | jq \
     "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/policies/communication/POLICY.md)",
     "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/policies/documents/POLICY.md)",
     "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/skills/document-governance/**)",
-    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/skills/project-state/**)"
+    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/skills/project-state/**)",
+    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/skills/speak/**)"
   ]' '
   def ours($hook):
     ($hook.command // "") as $command
