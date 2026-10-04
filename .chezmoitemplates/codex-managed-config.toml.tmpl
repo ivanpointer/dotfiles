@@ -6,6 +6,11 @@ notify = ["/Users/ivanpointer/.codex/computer-use/Codex Computer Use.app/Content
 personality = "pragmatic"
 approvals_reviewer = "guardian_subagent"
 
+# One global tooling server discovers the active project; no project allowlist.
+[mcp_servers.agent-policy-tooling]
+command = "/nix/var/nix/profiles/system/sw/bin/python3"
+args = ["{{ .chezmoi.homeDir }}/.local/share/agent-policy/src/agent_policy/tooling_mcp.py"]
+
 [mcp_servers.obsidian-docs-hypknowledge]
 command = "npx"
 args = ["-y", "@bitbonsai/mcpvault@latest", "/Users/ivanpointer/Source/hypknowledge/docs"]
