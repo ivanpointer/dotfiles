@@ -24,7 +24,7 @@ else
 fi
 
 "$root/agent-policy" validate
-"$root/agent-policy" install --all-installed --method link --adopt-identical
+"$root/agent-policy" install --all-installed --method link --adopt-identical --skip-mcp
 "$root/agent-policy" install --harness opencode --runtime --method link --adopt-identical
 "$root/agent-policy" install --harness pi --runtime --method link --adopt-identical
 printf '%s\n' "agent-policy: checked main and reconciled selected harness skills"
