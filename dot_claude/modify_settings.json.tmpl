@@ -11,18 +11,18 @@ declared="$(cat <<'CHEZMOI_DECLARED'
 CHEZMOI_DECLARED
 )"
 
-printf '%s' "$input" | jq \
+merged="$(printf '%s' "$input" | jq \
   --argjson declared "$declared" \
   --argjson markers '["# notchbar-agents-claude-hook", "# completion-alert-shared-hook", "# chezmoi-graft-hook"]' \
   --argjson legacyPrefixes '["workmux set-window-status waiting", "workmux set-window-status working", "workmux set-window-status done", "workmux register-agent"]' \
-  --arg policyRoot "/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy" \
+  --arg policyRoot "/{{ .chezmoi.homeDir }}/.local/share/agent-policy" \
   --argjson agentPolicyAllow '[
-    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/packaging/compiled/communication/high-context/generic-append-only.md)",
-    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/policies/communication/POLICY.md)",
-    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/policies/documents/POLICY.md)",
-    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/skills/document-governance/**)",
-    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/skills/project-state/**)",
-    "Read(/{{ .chezmoi.homeDir }}/Source/ivanpointer/agent-policy/skills/speak/**)"
+    "Read(/{{ .chezmoi.homeDir }}/.local/share/agent-policy/packaging/compiled/communication/high-context/generic-append-only.md)",
+    "Read(/{{ .chezmoi.homeDir }}/.local/share/agent-policy/policies/communication/POLICY.md)",
+    "Read(/{{ .chezmoi.homeDir }}/.local/share/agent-policy/policies/documents/POLICY.md)",
+    "Read(/{{ .chezmoi.homeDir }}/.local/share/agent-policy/skills/document-governance/**)",
+    "Read(/{{ .chezmoi.homeDir }}/.local/share/agent-policy/skills/project-state/**)",
+    "Read(/{{ .chezmoi.homeDir }}/.local/share/agent-policy/skills/speak/**)"
   ]' '
   def ours($hook):
     ($hook.command // "") as $command
@@ -50,4 +50,11 @@ printf '%s' "$input" | jq \
   | .permissions = ((.permissions // {})
       | .allow = (((.allow // []) | map(select(managed_policy_read | not)))
           | append_unique($agentPolicyAllow)))
-'
+')"
+
+AGENT_POLICY="${AGENT_POLICY_HOME:-{{ .chezmoi.homeDir }}/.local/share/agent-policy}/agent-policy"
+if [ -x "$AGENT_POLICY" ]; then
+  printf '%s' "$merged" | "$AGENT_POLICY" --harness claude filter
+else
+  printf '%s\n' "$merged"
+fi

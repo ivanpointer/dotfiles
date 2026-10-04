@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+root="${AGENT_POLICY_HOME:-$HOME/.local/share/agent-policy}"
+remote="git@github.com:ivanpointer/agent-policy.git"
+
+if [ ! -e "$root" ]; then
+  git clone --branch main --single-branch "$remote" "$root"
+else
+  if [ ! -d "$root/.git" ]; then
+    printf '%s\n' "agent-policy: refusing non-repository path $root" >&2
+    exit 1
+  fi
+  if [ "$(git -C "$root" remote get-url origin)" != "$remote" ]; then
+    printf '%s\n' "agent-policy: refusing unexpected origin for $root" >&2
+    exit 1
+  fi
+  if [ -n "$(git -C "$root" status --porcelain)" ]; then
+    printf '%s\n' "agent-policy: refusing dirty checkout $root" >&2
+    exit 1
+  fi
+  git -C "$root" fetch origin main
+  git -C "$root" merge --ff-only origin/main
+fi
+
+"$root/agent-policy" validate
+"$root/agent-policy" install --all-installed --method link --adopt-identical
+"$root/agent-policy" install --harness opencode --runtime --method link --adopt-identical
+"$root/agent-policy" install --harness pi --runtime --method link --adopt-identical
+printf '%s\n' "agent-policy: checked main and reconciled selected harness skills"

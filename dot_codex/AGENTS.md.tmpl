@@ -1,1 +1,9 @@
 {{ includeTemplate "harness-instructions.md.tmpl" . -}}
+{{- $communicationPolicy := printf "%s/.local/share/agent-policy/policies/communication/POLICY.md" .chezmoi.homeDir -}}
+{{- if stat $communicationPolicy }}
+## Communication Policy
+
+For every user-facing response, read and apply the communication policy at {{ $communicationPolicy }}. Read it once per session and reread it after a model switch, context compaction, or policy change. Follow its progress-cue rules in interim updates as well as final responses.
+{{- end }}
+
+{{ includeTemplate "agent-policy-instructions.md.tmpl" . }}

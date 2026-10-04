@@ -1,0 +1,5 @@
+{{- $root := env "AGENT_POLICY_HOME" -}}
+{{- if not $root -}}{{- $root = printf "%s/.local/share/agent-policy" .chezmoi.homeDir -}}{{- end -}}
+{{- if stat (printf "%s/agent-policy" $root) }}
+{{ output (printf "%s/agent-policy" $root) "render" }}
+{{- end }}

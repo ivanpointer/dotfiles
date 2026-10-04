@@ -11,7 +11,7 @@ declared="$(cat <<'CHEZMOI_DECLARED'
 CHEZMOI_DECLARED
 )"
 
-printf '%s' "$input" | jq --argjson declared "$declared" '
+merged="$(printf '%s' "$input" | jq --argjson declared "$declared" '
   .["$schema"] = ($declared["$schema"] // .["$schema"])
   | (.plugin // []) as $existingPlugins
   | .plugin = ($existingPlugins + [
@@ -20,4 +20,11 @@ printf '%s' "$input" | jq --argjson declared "$declared" '
     ])
   | .provider = ((.provider // {}) + ($declared.provider // {}))
   | .mcp = ((.mcp // {}) + ($declared.mcp // {}))
-'
+')"
+
+AGENT_POLICY="${AGENT_POLICY_HOME:-{{ .chezmoi.homeDir }}/.local/share/agent-policy}/agent-policy"
+if [ -x "$AGENT_POLICY" ]; then
+  printf '%s' "$merged" | "$AGENT_POLICY" --harness opencode filter
+else
+  printf '%s\n' "$merged"
+fi
