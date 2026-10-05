@@ -9,10 +9,7 @@ approvals_reviewer = "guardian_subagent"
 [mcp_servers.agent-policy-tooling]
 command = "/nix/var/nix/profiles/system/sw/bin/python3"
 args = ["{{ .chezmoi.homeDir }}/.local/share/agent-policy/src/agent_policy/tooling_mcp.py"]
-default_tools_approval_mode = "approve"
 
-# Agent-policy operations are scoped to the connected project and already
-# enforce root, freshness, and recovery invariants in their MCP backend.
 [mcp_servers.agent-policy-tooling.tools.discover_operations]
 approval_mode = "approve"
 

@@ -27,7 +27,7 @@ awk '
     if ($0 ~ /^[[:space:]]*\[/) {
       # Every table the managed template re-emits must be stripped here, or
       # each apply appends a duplicate and can break Codex startup.
-      skip = ($0 ~ /^[[:space:]]*\[mcp_servers\.(agent-policy-tooling|obsidian-docs-hypknowledge|azure-devops-hypknowledge|laravel-boost-tracker|goland|open-brain|1password|graft)(\.|\])/)
+      skip = ($0 ~ /^[[:space:]]*\[mcp_servers\.(agent-policy-tooling|openrouter-fish-tts|document-service|obsidian-docs-hypknowledge|azure-devops-hypknowledge|laravel-boost-tracker|goland|open-brain|1password|graft)(\.|\])/)
     }
     if (skip) next
     if ($0 == "# One global tooling server discovers the active project; no project allowlist.") next
