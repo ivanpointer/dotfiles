@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Queue a concise completion alert through the local MOSS-TTS service.
+"""Queue a concise completion alert through the local OpenRouter Fish Audio service.
 
 This compatibility command preserves the established ``speak "summary"``
 interface. It does not render or play audio itself: the loopback service owns
@@ -36,13 +36,13 @@ def scope_identity(directory: Path | None = None) -> str:
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--voice", default=os.environ.get("MOSS_TTS_DEFAULT_VOICE", "auto"))
-    parser.add_argument("--agent", default=os.environ.get("MOSS_TTS_AGENT_ID") or scope_identity())
+    parser.add_argument("--voice", default=os.environ.get("OPENROUTER_FISH_TTS_DEFAULT_VOICE", "auto"))
+    parser.add_argument("--agent", default=os.environ.get("OPENROUTER_FISH_TTS_AGENT_ID") or scope_identity())
     parser.add_argument("--set-voice", metavar="VOICE")
     parser.add_argument("--set-style", choices=("on", "off"), metavar="ON_OR_OFF")
     parser.add_argument("--set-style-strength", choices=("light", "medium", "strong"), metavar="STRENGTH")
     parser.add_argument("--global-style", action="store_true", help="apply --set-style to the machine default")
-    parser.add_argument("--url", default=os.environ.get("MOSS_TTS_SPEAK_URL", "http://127.0.0.1:8766/api/speak"))
+    parser.add_argument("--url", default=os.environ.get("OPENROUTER_FISH_TTS_SPEAK_URL", "http://127.0.0.1:8766/api/speak"))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("text", nargs="*")
     args = parser.parse_args(argv)
@@ -67,7 +67,7 @@ def main(argv: list[str]) -> int:
                 print(response.read().decode())
             return 0
         except (urllib.error.URLError, OSError) as error:
-            print("moss-tts voice preference failed: " + str(error), file=sys.stderr)
+            print("openrouter-fish-tts voice preference failed: " + str(error), file=sys.stderr)
             return 2
     if not args.text:
         parser.error("text is required unless --set-voice is used")
@@ -83,8 +83,12 @@ def main(argv: list[str]) -> int:
         with urllib.request.urlopen(request, timeout=30) as response:
             print(response.read().decode())
         return 0
+    except urllib.error.HTTPError as error:
+        print(f"openrouter-fish-tts speak request rejected ({error.code}): " + error.read().decode(errors="replace"),
+              file=sys.stderr)
+        return 2
     except (urllib.error.URLError, OSError) as error:
-        print("moss-tts speak request failed: " + str(error), file=sys.stderr)
+        print("openrouter-fish-tts speak request failed: " + str(error), file=sys.stderr)
         return 2
 
 

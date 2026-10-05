@@ -1,7 +1,6 @@
 {{- $openBrainMcpKey := onepasswordRead "op://Open-Brain/One-Brain MCP Access Key/password" -}}
 approval_policy = "on-request"
-sandbox_mode = "workspace-write"
-permission_mode = "auto-edit"
+default_permissions = ":workspace"
 notify = ["/Users/ivanpointer/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
 personality = "pragmatic"
 approvals_reviewer = "guardian_subagent"
@@ -10,6 +9,36 @@ approvals_reviewer = "guardian_subagent"
 [mcp_servers.agent-policy-tooling]
 command = "/nix/var/nix/profiles/system/sw/bin/python3"
 args = ["{{ .chezmoi.homeDir }}/.local/share/agent-policy/src/agent_policy/tooling_mcp.py"]
+default_tools_approval_mode = "approve"
+
+# Agent-policy operations are scoped to the connected project and already
+# enforce root, freshness, and recovery invariants in their MCP backend.
+[mcp_servers.agent-policy-tooling.tools.discover_operations]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.query]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.read]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.schema]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.mutate]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.lifecycle]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.review]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.recovery]
+approval_mode = "approve"
+
+[mcp_servers.agent-policy-tooling.tools.batch_mutations]
+approval_mode = "approve"
 
 [mcp_servers.obsidian-docs-hypknowledge]
 command = "npx"
@@ -64,9 +93,6 @@ args = ["run", "-c", "/Users/ivanpointer/Source/hypknowledge/github-hypknowledge
 
 [mcp_servers.laravel-boost-tracker.tools.search-docs]
 approval_mode = "approve"
-
-[mcp_servers.goland]
-url = "http://127.0.0.1:64342/stream"
 
 [mcp_servers.open-brain]
 url = "https://grjyscwkapsgnvrabrmf.supabase.co/functions/v1/open-brain-mcp"

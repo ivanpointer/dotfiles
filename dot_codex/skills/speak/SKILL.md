@@ -1,13 +1,13 @@
 ---
 name: speak
-description: Deliver concise audible completion and intervention alerts through the installed local MOSS-TTS service.
+description: Deliver concise audible completion and intervention alerts through the installed local OpenRouter Fish Audio service.
 ---
 
 # Speak
 
 Use `speak "short summary"` at the end of a top-level agent turn. The command
-submits one request to the loopback MOSS-TTS service, which owns the saved
-reference, rendering, FIFO ordering, and host playback. Always use the standard
+submits one request to the loopback OpenRouter Fish Audio service, which owns
+voice selection, rendering, FIFO ordering, and host playback. Always use the standard
 command: no execution permission, flags, or sandbox-specific workaround is
 needed. The default is a machine-local preference scoped to the current
 repository root (or the current directory outside Git). When the user
@@ -15,7 +15,7 @@ explicitly says to persistently use a saved voice, run
 `speak --set-voice VOICE` from that project; ordinary `speak "summary"` calls
 there then use it automatically. A named agent may instead use
 `speak --agent AGENT_ID --set-voice VOICE`; its explicit identity takes
-priority when its MCP configuration sets `MOSS_TTS_AGENT_ID=AGENT_ID`. The
+priority when its MCP configuration sets `OPENROUTER_FISH_TTS_AGENT_ID=AGENT_ID`. The
 MCP bridge derives the same project scope automatically when it is launched
 from the project. Use `--voice` only for an explicitly requested one-off
 override.
@@ -58,8 +58,8 @@ Speak new consequential risks, actionable blockers or corrections when they earn
 
 Client success means queued, not played or heard. The renderer waits for host
 playback to finish before advancing its FIFO queue. Multi-sentence calls render
-as sentence chunks, but playback holds the full logical message together so no
-other alert can cut into it. The current native runtime
-is Apple Silicon macOS with MLX/Metal; core toolkit support for Linux and
-Windows does not imply that this optional renderer is available there. Do not
+as complete messages, but playback holds the full logical message together so no
+other alert can cut into it. The current native runtime is a macOS loopback
+service that calls OpenRouter's Fish Audio API; core toolkit support for Linux
+and Windows does not imply that this optional renderer is available there. Do not
 claim a service is running merely because this skill is installed.

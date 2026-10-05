@@ -25,10 +25,13 @@ awk '
   FILENAME == ARGV[1] { print; next }
   FILENAME == "-" {
     if ($0 ~ /^[[:space:]]*\[/) {
+      # Every table the managed template re-emits must be stripped here, or
+      # each apply appends a duplicate and can break Codex startup.
       skip = ($0 ~ /^[[:space:]]*\[mcp_servers\.(agent-policy-tooling|obsidian-docs-hypknowledge|azure-devops-hypknowledge|laravel-boost-tracker|goland|open-brain|1password|graft)(\.|\])/)
     }
     if (skip) next
-    if ($0 ~ /^[[:space:]]*(approval_policy|sandbox_mode|permission_mode|notify|personality|approvals_reviewer)[[:space:]]*=/) next
+    if ($0 == "# One global tooling server discovers the active project; no project allowlist.") next
+    if ($0 ~ /^[[:space:]]*(approval_policy|sandbox_mode|default_permissions|permission_mode|notify|personality|approvals_reviewer)[[:space:]]*=/) next
     if (!emitted && $0 ~ /^[[:space:]]*$/) next
     print
     emitted = 1

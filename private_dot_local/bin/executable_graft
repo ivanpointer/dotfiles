@@ -1,7 +1,7 @@
 #!/bin/sh
 # Stable machine entrypoint for every shell and agent harness. GUI-launched
 # harnesses do not inherit .zshenv, so load the same private Graft/Jev settings
-# here before handing off to the reproducible package pinned by nix-darwin.
+# here before handing off to the reproducible package supplied by nix-darwin.
 set -eu
 
 env_file="${XDG_CONFIG_HOME:-${HOME}/.config}/graft/environment"

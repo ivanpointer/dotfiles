@@ -6,10 +6,6 @@
           "command": "'{{ .chezmoi.homeDir }}/Library/Application Support/Bartender/NotchBar/AgentStatus/hooks/claude-event-hook.sh' Waiting # notchbar-agents-claude-hook",
           "type": "command"
         }]
-      },
-      {
-        "matcher": "permission_prompt|elicitation_dialog",
-        "hooks": [{ "command": "workmux set-window-status waiting", "type": "command" }]
       }
     ],
     "PostModelSwitch": [{
@@ -41,9 +37,6 @@
           "command": "'{{ .chezmoi.homeDir }}/Library/Application Support/Bartender/NotchBar/AgentStatus/hooks/claude-event-hook.sh' Auto # notchbar-agents-claude-hook",
           "type": "command"
         }]
-      },
-      {
-        "hooks": [{ "command": "workmux set-window-status working", "type": "command" }]
       }
     ],
     "PostToolUseFailure": [{
@@ -77,10 +70,6 @@
           "command": "'{{ .chezmoi.homeDir }}/Library/Application Support/Bartender/NotchBar/AgentStatus/hooks/claude-event-hook.sh' Idle # notchbar-agents-claude-hook",
           "type": "command"
         }]
-      },
-      {
-        "matcher": "startup|resume|clear|fork",
-        "hooks": [{ "command": "workmux register-agent", "type": "command" }]
       }
     ],
     "Stop": [
@@ -102,9 +91,6 @@
           "command": "SAY_ALERT_SESSION_PREFIX=claude \"{{ .chezmoi.homeDir }}/.local/bin/agent-completion-alert\" # completion-alert-shared-hook",
           "type": "command"
         }]
-      },
-      {
-        "hooks": [{ "command": "workmux set-window-status done", "type": "command" }]
       }
     ],
     "UserPromptSubmit": [
@@ -120,9 +106,6 @@
           "command": "'{{ .chezmoi.homeDir }}/Library/Application Support/Bartender/NotchBar/AgentStatus/hooks/claude-event-hook.sh' Working # notchbar-agents-claude-hook",
           "type": "command"
         }]
-      },
-      {
-        "hooks": [{ "command": "workmux set-window-status working", "type": "command" }]
       }
     ]
   }
