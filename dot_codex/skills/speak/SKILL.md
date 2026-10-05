@@ -43,6 +43,26 @@ still explicit. Do not add, remove, imply, soften, or strengthen a proposition.
 Use unchanged wording only when it is materially necessary; do not default to
 generic unchanged text merely because it is easier.
 
+## Playback controls
+
+When the user asks to mute or disable speech, run `speak --mute`; when they
+ask to resume, run `speak --unmute`. Both apply to all agents on this host and
+persist across service restarts. Check `speak --playback-status` to confirm.
+A suppressed receipt is successful silence, not failed playback; do not retry
+or bypass it using another player. Keep the written response available.
+
+Automatic Zoom protection defaults on. Toggle it with
+`speak --auto-mute-zoom on|off` or the voice console's playback controls.
+On supported macOS versions, local CoreAudio metadata detects Zoom's active
+input or output streams, including calls with the microphone muted. It is an
+audio-activity proxy, not exact meeting status: previews may mute too, and
+calls without active audio or browser Zoom sessions can be missed. Detection
+failures/unsupported hosts are reported; use manual mute in those cases.
+Muted requests are discarded before rendering, queued alerts are cleared,
+and an existing player is stopped within the polling interval (normally
+250 ms). Unmuting resumes only new alerts; it never replays the backlog.
+The separate `/render` download API does not play audio and is unchanged.
+
 ## What to speak
 
 Use one designated top-level speaker for a delegated tree; children send findings to their parent. Preserve applicable end-of-turn requirements. Speech remains optional for other adopters and works without project state, orchestration or a communication policy.

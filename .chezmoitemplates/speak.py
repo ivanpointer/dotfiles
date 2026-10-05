@@ -42,10 +42,34 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--set-style", choices=("on", "off"), metavar="ON_OR_OFF")
     parser.add_argument("--set-style-strength", choices=("light", "medium", "strong"), metavar="STRENGTH")
     parser.add_argument("--global-style", action="store_true", help="apply --set-style to the machine default")
+    playback = parser.add_mutually_exclusive_group()
+    playback.add_argument("--mute", action="store_true", help="mute speech on this host until explicitly unmuted")
+    playback.add_argument("--unmute", action="store_true", help="clear manual mute; Zoom protection still applies")
+    playback.add_argument("--auto-mute-zoom", choices=("on", "off"), help="suppress speech during Zoom audio activity (macOS)")
+    playback.add_argument("--playback-status", action="store_true", help="show manual mute and Zoom detection status")
     parser.add_argument("--url", default=os.environ.get("OPENROUTER_FISH_TTS_SPEAK_URL", "http://127.0.0.1:8766/api/speak"))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("text", nargs="*")
     args = parser.parse_args(argv)
+    playback_control = args.mute or args.unmute or args.auto_mute_zoom or args.playback_status
+    if playback_control:
+        if args.text or args.set_voice or args.set_style or args.set_style_strength:
+            parser.error("choose playback control or speech/voice settings, not both")
+        payload = ({"muted": args.mute} if args.mute or args.unmute else
+                   {"auto_mute_zoom": args.auto_mute_zoom == "on"} if args.auto_mute_zoom else None)
+        endpoint = args.url.rsplit("/api/speak", 1)[0] + "/api/settings/playback"
+        if args.dry_run:
+            print(json.dumps({"status": "would-read" if payload is None else "would-update", "url": endpoint, "settings": payload}))
+            return 0
+        request = urllib.request.Request(endpoint, data=json.dumps(payload).encode() if payload else None,
+                                         headers={"Content-Type": "application/json"}, method="PUT" if payload else "GET")
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                print(response.read().decode())
+            return 0
+        except (urllib.error.URLError, OSError) as error:
+            print("openrouter-fish-tts playback control failed: " + str(error), file=sys.stderr)
+            return 2
     if args.set_voice or args.set_style or args.set_style_strength:
         if args.text:
             parser.error("text is not accepted with a persistent setting")
