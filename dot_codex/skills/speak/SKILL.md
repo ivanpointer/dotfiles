@@ -21,8 +21,10 @@ there then use it automatically. A named agent may instead use
 `speak --agent AGENT_ID --set-voice VOICE`; its explicit identity takes
 priority when its MCP configuration sets `OPENROUTER_FISH_TTS_AGENT_ID=AGENT_ID`. The
 MCP bridge derives the same project scope automatically when it is launched
-from the project. Use `--voice` only for an explicitly requested one-off
-override.
+from the project. Omit `voice` on every call, as the service resolves it from the
+project and then the default. Use `--voice`, or the tool's `voice` argument, only for an
+explicitly requested one-off override, and never guess a name. A bridge that still
+requires the argument takes `"auto"`.
 
 Submit plain factual text; do not author the character yourself or create Fish
 tags. The service applies the saved style through a small OpenRouter model in
@@ -87,3 +89,20 @@ other alert can cut into it. The current native runtime is a macOS loopback
 service that calls OpenRouter's Fish Audio API; core toolkit support for Linux
 and Windows does not imply that this optional renderer is available there. Do not
 claim a service is running merely because this skill is installed.
+
+## Local audit records
+
+Raw spoken-text audit records are disabled by default because they retain the
+caller’s original text and the service’s final spoken text. When the user asks
+to assess speech over time, enable them explicitly with
+`OPENROUTER_FISH_AUDIT_ENABLED=1` when installing the native service. Records
+stay in the local state directory (`audit/events.jsonl`), are mode 600, rotate
+at 16 MiB, and are never committed, uploaded, or included in recovery packages.
+Each prepared alert records UTC time, job and voice IDs, original/final text,
+project label, agent identity, available harness identity, prefix/style/modifier
+context, authoring disposition, one event for each candidate/retry with the raw
+Haiku draft, elapsed time and either its bounded Jev fidelity judgment or the stage
+and reason that rejected it, the writer and judge model names, and separate/combined rough text-token estimates
+for Haiku, Jev and Fish. These estimates use character length divided by four
+and recorded model-call counts; they are for tuning only, not provider billing
+or cost evidence. Audit-write failure never interrupts speech.
