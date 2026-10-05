@@ -27,4 +27,6 @@ fi
 
 "$root/agent-policy" validate
 "$root/agent-policy" host-install --runtime --method link
+OPENROUTER_FISH_AUDIT_ENABLED="${OPENROUTER_FISH_AUDIT_ENABLED:-1}" \
+  "$root/runtime/openrouter-fish-tts/install-native.sh"
 printf '%s\n' "agent-policy: updated $ref and reconciled installed harnesses"
