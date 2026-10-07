@@ -4,7 +4,20 @@
 # the installed package instead of maintaining second copies in dotfiles.
 set -eu
 
-graft_bin="${GRAFT_REAL_BIN:-/run/current-system/sw/bin/graft}"
+if [ -n "${GRAFT_REAL_BIN:-}" ]; then
+  graft_bin="$GRAFT_REAL_BIN"
+else
+  for candidate in \
+    /nix/var/nix/profiles/system/sw/bin/graft \
+    /run/current-system/sw/bin/graft
+  do
+    if [ -x "$candidate" ]; then
+      graft_bin="$candidate"
+      break
+    fi
+  done
+  : "${graft_bin:=/nix/var/nix/profiles/system/sw/bin/graft}"
+fi
 graft_real="$(realpath "$graft_bin")"
 graft_prefix="$(CDPATH= cd -P "$(dirname "$graft_real")/.." && pwd)"
 module="${graft_prefix}/share/graft/claude/skill-template.js"

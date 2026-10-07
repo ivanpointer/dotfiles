@@ -7,7 +7,22 @@ set -eu
 env_file="${XDG_CONFIG_HOME:-${HOME}/.config}/graft/environment"
 [ ! -r "$env_file" ] || . "$env_file"
 
-real_graft="${GRAFT_REAL_BIN:-/run/current-system/sw/bin/graft}"
+if [ -n "${GRAFT_REAL_BIN:-}" ]; then
+  real_graft="$GRAFT_REAL_BIN"
+else
+  # nix-darwin has no /run/current-system link; NixOS does. Keep both
+  # declarative profile locations so this generated entrypoint is portable.
+  for candidate in \
+    /nix/var/nix/profiles/system/sw/bin/graft \
+    /run/current-system/sw/bin/graft
+  do
+    if [ -x "$candidate" ]; then
+      real_graft="$candidate"
+      break
+    fi
+  done
+  : "${real_graft:=/nix/var/nix/profiles/system/sw/bin/graft}"
+fi
 if [ ! -x "$real_graft" ]; then
   echo "graft wrapper: installed binary not found at $real_graft" >&2
   exit 127

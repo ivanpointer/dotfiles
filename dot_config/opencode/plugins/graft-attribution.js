@@ -6,12 +6,21 @@ import { pathToFileURL } from 'node:url';
 let runtime;
 
 async function graftRuntime() {
-  const claudeDir = execFileSync('/run/current-system/sw/bin/graft-claude-dir', [], {
-    encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000,
-  }).trim();
-  if (!claudeDir) return null;
-  const path = join(claudeDir, '..', 'hosts', 'native-attribution.js');
-  return import(pathToFileURL(path).href);
+  for (const locator of [
+    '/nix/var/nix/profiles/system/sw/bin/graft-claude-dir',
+    '/run/current-system/sw/bin/graft-claude-dir',
+  ]) {
+    try {
+      const claudeDir = execFileSync(locator, [], {
+        encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000,
+      }).trim();
+      if (claudeDir) {
+        const path = join(claudeDir, '..', 'hosts', 'native-attribution.js');
+        return import(pathToFileURL(path).href);
+      }
+    } catch { /* try the next platform profile */ }
+  }
+  return null;
 }
 
 function currentRuntime() {
